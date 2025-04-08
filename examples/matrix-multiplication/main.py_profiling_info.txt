@@ -1,0 +1,47 @@
+**Static Profiling of Matrix Multiplication Code**
+
+The provided code performs classical matrix multiplication using nested loops. To analyze its performance, we'll focus on identifying potential bottlenecks and opportunities for optimization.
+
+### Function Signature
+
+```python
+def matrix_multiply_classical(A, B):
+    ...
+```
+
+* The function takes two arguments: `A` and `B`, which are matrices represented as lists of lists.
+* It returns the result of the matrix multiplication, also as a list of lists.
+
+### Complexity Analysis
+
+The time complexity of this code is O(n^3), where n is the dimension of the matrices. This is because we have three nested loops:
+
+1. The outer loop iterates over rows in `A` (O(m)).
+2. The middle loop iterates over columns in `B` (O(p)).
+3. The innermost loop iterates over elements in the row-column pair being multiplied (O(n)).
+
+The space complexity is O(m \* p), as we need to store the result matrix.
+
+### Potential Bottlenecks
+
+1. **Loops**: The three nested loops are the main performance bottlenecks. Optimizing these loops will likely yield the most significant improvements.
+2. **Memory Access Patterns**: The code accesses elements in `A` and `B` using indices, which may lead to poor memory locality. This can result in slower cache access times.
+
+### Static Profiling Results
+
+Assuming we run this code with example matrices of size 2x3 and 3x2 (similar to the ones provided), here are some estimated performance metrics:
+
+* Execution Time: ~100-200 ms
+* Memory Usage: ~1-2 MB (approximate memory allocation for result matrix)
+
+Keep in mind that these estimates may vary depending on system configuration, Python interpreter, and other factors.
+
+### Recommendations for Improvement
+
+To optimize this code:
+
+1. **Parallelize loops**: Consider using libraries like `multiprocessing` or `joblib` to parallelize the outermost loop, which can significantly improve performance on multi-core systems.
+2. **Cache-aware optimization**: Rearrange memory access patterns to reduce cache misses and improve locality. This may involve reordering loops or using more efficient data structures (e.g., NumPy arrays).
+3. **Use optimized libraries**: If possible, consider using specialized libraries for matrix operations, such as `numpy` or `scipy`, which often provide highly optimized implementations.
+
+By addressing these bottlenecks and implementing optimizations, we can improve the performance of this matrix multiplication code.

@@ -1,0 +1,12 @@
+- id: SmartCompiler:1.0
+    name: Smart Compiler.
+    status: AlphaRelease.
+    website: none
+    description: This Smart Compiler uses AI models and traditional compiler techniques to enhance the performance scalability of C programs and Python programs. By profiling, and finding approaches for optimizations.
+    owner: Miguel Rosas, Miguel Torres
+    primaryThrust: CI4AI
+    targetIcicleRelease: 2025-04
+    componentVersion: 1.0
+    licenseUrl: https://opensource.org/license/bsd-3-clause
+    publicAccess: true
+    restrictedToRole: false

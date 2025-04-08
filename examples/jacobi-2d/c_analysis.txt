@@ -1,0 +1,287 @@
+FROM STATIC ANALYSIS:
+            **Static Profiling Analysis**
+
+The provided code performs matrix multiplication using a three-loop approach. The static profiling analysis will examine the time complexity and space complexity of the algorithm.
+
+### Time Complexity
+
+The `matrix_multiply` function has a time complexity of O(m \* n \* p), where:
+
+*   m is the number of rows in matrix A
+*   n is the number of columns in matrix A (also the number of rows in matrix B)
+*   p is the number of columns in matrix B
+
+This is because the function performs a nested loop structure with three loops, each iterating over different dimensions of the matrices.
+
+### Space Complexity
+
+The space complexity of the `matrix_multiply` function is O(m \* n + n \* p), where:
+
+*   m is the number of rows in matrix A
+*   n is the number of columns in matrix A (also the number of rows in matrix B)
+*   p is the number of columns in matrix B
+
+This is because the function creates three matrices, each with dimensions m x n, n x p, and m x p, respectively. The space complexity accounts for the memory allocation required to store these matrices.
+
+### Performance Optimizations
+
+To optimize the performance of the matrix multiplication algorithm:
+
+1.  **Block-based Matrix Multiplication**: Divide the matrices into smaller blocks (e.g., 16x16) and perform the multiplication block-wise. This can reduce the number of operations and improve cache locality.
+2.  **Cache Blocking**: Group the elements of the matrices into cache blocks to minimize cache misses. This can lead to significant performance improvements for large matrices.
+3.  **Parallelization**: Utilize multi-core processors or distributed computing environments to parallelize the matrix multiplication computation. This can significantly speed up the computation time for very large matrices.
+
+### Code Refactoring
+
+To improve the code's maintainability and readability:
+
+1.  **Use const Correctness**: Mark function parameters as `const` when they are not modified within the function. This helps prevent unintended modifications and improves code safety.
+2.  **Function Extractor**: Break down complex functions like `matrix_multiply` into smaller, more manageable functions. Each function should perform a single responsibility (e.g., allocating memory, performing a single iteration of the multiplication).
+3.  **Variable Naming**: Use descriptive variable names to improve readability and reduce the likelihood of errors.
+
+**Refactored Code**
+
+```c
+// matrix_multiply.c
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define MAX_ROWS 1000
+#define MAX_COLS 1000
+
+void allocate_matrix(double ***matrix, int rows, int cols) {
+    *matrix = (double **)malloc(rows * sizeof(double *));
+    for (int i = 0; i < rows; i++) {
+        (*matrix)[i] = (double *)malloc(cols * sizeof(double));
+    }
+}
+
+void free_matrix(double **matrix, int rows) {
+    for (int i = 0; i < rows; i++) {
+        free(matrix[i]);
+    }
+    free(matrix);
+}
+
+void print_matrix(const double **matrix, int rows, int cols) {
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            printf("%8.2f ", matrix[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+void multiply_block(double **A, double **B, double *block_result, int rows, int cols) {
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            block_result[i * cols + j] = 0.0;
+            for (int k = 0; k < MAX_COLS; k++) {
+                block_result[i * cols + j] += A[i][k] * B[k][j];
+            }
+        }
+    }
+}
+
+void matrix_multiply(double **A, double **B, double **C, int rows, int cols) {
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            C[i][j] = 0.0;
+            multiply_block(A, B, &C[i][j], MAX_ROWS, MAX_COLS);
+        }
+    }
+}
+
+// Example usage
+int main() {
+    int m = 2, n = 3, p = 2;
+
+    double **A, **B, **C;
+
+    allocate_matrix(&A, m, n);
+    allocate_matrix(&B, n, p);
+    allocate_matrix(&C, m, p);
+
+    // Initialize matrices
+    A[0][0] = 1.0; A[0][1] = 2.0; A[0][2] = 3.0;
+    A[1][0] = 4.0; A[1][1] = 5.0; A[1][2] = 6.0;
+
+    B[0][0] = 7.0; B[0][1] = 8.0;
+    B[1][0] = 9.0; B[1][1] = 10.0;
+    B[2][0] = 11.0; B[2][1] = 12.0;
+
+    // Perform matrix multiplication
+    clock_t start = clock();
+    matrix_multiply(A, B, C, m, p);
+    clock_t end = clock();
+
+    print_matrix(C, m, p);
+
+    free_matrix(A, m);
+    free_matrix(B, n);
+    free_matrix(C, m);
+
+    return 0;
+}
+```
+            FROM DYNAMIC ANALYSIS:
+            Flat profile:
+
+Each sample counts as 0.01 seconds.
+ no time accumulated
+
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls  Ts/call  Ts/call  name    
+  0.00      0.00     0.00        3     0.00     0.00  allocate_matrix
+  0.00      0.00     0.00        3     0.00     0.00  free_matrix
+  0.00      0.00     0.00        3     0.00     0.00  print_matrix
+  0.00      0.00     0.00        1     0.00     0.00  matrix_multiply
+
+ %         the percentage of the total running time of the
+time       program used by this function.
+
+cumulative a running sum of the number of seconds accounted
+ seconds   for by this function and those listed above it.
+
+ self      the number of seconds accounted for by this
+seconds    function alone.  This is the major sort for this
+           listing.
+
+calls      the number of times this function was invoked, if
+           this function is profiled, else blank.
+
+ self      the average number of milliseconds spent in this
+ms/call    function per call, if this function is profiled,
+	   else blank.
+
+ total     the average number of milliseconds spent in this
+ms/call    function and its descendents per call, if this
+	   function is profiled, else blank.
+
+name       the name of the function.  This is the minor sort
+           for this listing. The index shows the location of
+	   the function in the gprof listing. If the index is
+	   in parenthesis it shows where it would appear in
+	   the gprof listing if it were to be printed.
+
+Copyright (C) 2012-2022 Free Software Foundation, Inc.
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.
+
+		     Call graph (explanation follows)
+
+
+granularity: each sample hit covers 4 byte(s) no time propagated
+
+index % time    self  children    called     name
+                0.00    0.00       3/3           main [10]
+[1]      0.0    0.00    0.00       3         allocate_matrix [1]
+-----------------------------------------------
+                0.00    0.00       3/3           main [10]
+[2]      0.0    0.00    0.00       3         free_matrix [2]
+-----------------------------------------------
+                0.00    0.00       3/3           main [10]
+[3]      0.0    0.00    0.00       3         print_matrix [3]
+-----------------------------------------------
+                0.00    0.00       1/1           main [10]
+[4]      0.0    0.00    0.00       1         matrix_multiply [4]
+-----------------------------------------------
+
+ This table describes the call tree of the program, and was sorted by
+ the total amount of time spent in each function and its children.
+
+ Each entry in this table consists of several lines.  The line with the
+ index number at the left hand margin lists the current function.
+ The lines above it list the functions that called this function,
+ and the lines below it list the functions this one called.
+ This line lists:
+     index	A unique number given to each element of the table.
+		Index numbers are sorted numerically.
+		The index number is printed next to every function name so
+		it is easier to look up where the function is in the table.
+
+     % time	This is the percentage of the `total' time that was spent
+		in this function and its children.  Note that due to
+		different viewpoints, functions excluded by options, etc,
+		these numbers will NOT add up to 100%.
+
+     self	This is the total amount of time spent in this function.
+
+     children	This is the total amount of time propagated into this
+		function by its children.
+
+     called	This is the number of times the function was called.
+		If the function called itself recursively, the number
+		only includes non-recursive calls, and is followed by
+		a `+' and the number of recursive calls.
+
+     name	The name of the current function.  The index number is
+		printed after it.  If the function is a member of a
+		cycle, the cycle number is printed between the
+		function's name and the index number.
+
+
+ For the function's parents, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the function into this parent.
+
+     children	This is the amount of time that was propagated from
+		the function's children into this parent.
+
+     called	This is the number of times this parent called the
+		function `/' the total number of times the function
+		was called.  Recursive calls to the function are not
+		included in the number after the `/'.
+
+     name	This is the name of the parent.  The parent's index
+		number is printed after it.  If the parent is a
+		member of a cycle, the cycle number is printed between
+		the name and the index number.
+
+ If the parents of the function cannot be determined, the word
+ `<spontaneous>' is printed in the `name' field, and all the other
+ fields are blank.
+
+ For the function's children, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the child into the function.
+
+     children	This is the amount of time that was propagated from the
+		child's children to the function.
+
+     called	This is the number of times the function called
+		this child `/' the total number of times the child
+		was called.  Recursive calls by the child are not
+		listed in the number after the `/'.
+
+     name	This is the name of the child.  The child's index
+		number is printed after it.  If the child is a
+		member of a cycle, the cycle number is printed
+		between the name and the index number.
+
+ If there are any cycles (circles) in the call graph, there is an
+ entry for the cycle-as-a-whole.  This entry shows who called the
+ cycle (as parents) and the members of the cycle (as children.)
+ The `+' recursive calls entry shows the number of function calls that
+ were internal to the cycle, and the calls entry for each member shows,
+ for that member, how many times it was called from other members of
+ the cycle.
+
+Copyright (C) 2012-2022 Free Software Foundation, Inc.
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.
+
+Index by function name
+
+   [1] allocate_matrix         [4] matrix_multiply
+   [2] free_matrix             [3] print_matrix
+
+            

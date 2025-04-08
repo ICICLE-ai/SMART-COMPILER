@@ -1,0 +1,17 @@
+[project]
+name = "smart-compiler"
+version = "0.1.0"
+description = "Smart compiler infrastructure for LLMs and users to use compiler tools"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.28.1",
+    "mcp-client>=0.2.0",
+    "mcp[cli]>=1.6.0",
+    "python-dotenv>=1.1.0",
+    "uvicorn>=0.34.0",
+    "fastapi>=0.108.0",
+    "pydantic>=2.5.0",
+    "starlette>=0.46.1",
+    "ollama>=0.4.7",
+]
