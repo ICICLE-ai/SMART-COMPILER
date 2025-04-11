@@ -1,5 +1,4 @@
 
-from turtle import st
 from tools.profiler.cetus.cetus_profiler import CetusProfiler
 from tools.profiler.mock.analytic_profiler import AnalyticProfiler
 from tools.profiler.ollama.ollama_profiler import OllamaProfiler

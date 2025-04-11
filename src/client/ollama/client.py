@@ -32,7 +32,7 @@ class OllamaListRootsFnT(ListRootsFnT):
             roots=[
                 Root(
                     name="smart-compiler-db_mock",
-                    uri=FileUrl("/mnt/d/workspace/python/smart-compiler/examples")
+                    uri=FileUrl(os.getenv("ALLOWED_PATHS", "")),
                 )
             ]
         )
@@ -55,7 +55,7 @@ class OllamaMCPClient(AbstractMCPClient):
         
         env = os.environ.copy()
                 
-        server_url = os.getenv("MCP_SERVER_URL", "http://localhost:8000/sse")
+        server_url = os.getenv("MCP_SERVER_URL", "http://localhost:8000")
 
   
         self.stdio, self.write = await self.exit_stack.enter_async_context(

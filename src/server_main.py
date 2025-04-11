@@ -30,7 +30,7 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[Any]:
 
 mcp_server = FastMCP("smart-compiler-proxy", 
                      lifespan=app_lifespan, 
-                     port=int(os.getenv("MCP_SERVER_PORT", 8000)), 
+                     port=int(os.getenv("MCP_SERVER_PORT", "8000")), 
                      host=(os.getenv("MCP_SERVER_HOST","0.0.0.0")))
 
 
@@ -49,8 +49,14 @@ def list_files(ctx: Context) -> str:
     List all files in the given path. Use to know what files are available for the user.
     Once, you can use the file_paths to use other tools.
     """
-    files = os.listdir("/mnt/d/workspace/python/smart-compiler/examples")
-    tree = os.walk("/mnt/d/workspace/python/smart-compiler/examples")
+
+    allowed_paths = os.getenv("ALLOWED_PATHS", None)
+    if allowed_paths is None:
+        logger.error("ALLOWED_PATHS not set")
+        return "ALLOWED_PATHS not set"
+
+    files = os.listdir(allowed_paths)
+    tree = os.walk(allowed_paths)
     logger.debug(f"files: {files}")
     tree_str = ""
     for root, dirs, files in tree:
