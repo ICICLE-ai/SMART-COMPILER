@@ -1,7 +1,8 @@
 from typing import Any
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
+from mcp import ClientSession
+#from mcp.client.stdio import stdio_client
 from mcp.types import TextResourceContents
+from mcp.client.sse import sse_client
 
 from ollama import Client
 from client.abstract.base_client import AbstractMCPClient
@@ -44,53 +45,30 @@ class OllamaMCPClient(AbstractMCPClient):
         self._internal_ollama_client = Client(host=os.getenv("OLLAMA_HOST"))
         self.tools = []
 
-    
-    async def connect_to_server(self, server_script_path: str):
+
+    async def connect_to_server(self):
         """Connect to an MCP server
 
         Args:
             server_script_path: Path to the server script (.py or .js)
         """
-        is_python = server_script_path.endswith('.py')
-        is_js = server_script_path.endswith('.js')
-        if not (is_python or is_js):
-            raise ValueError("Server script must be a .py or .js file")
-
-        # Get the current Python executable
-        command = sys.executable if is_python else "node"
-        logger.debug(f"module_server_script_path: {server_script_path}")
-        logger.debug(f"command server: {command}")
         
-        # Create environment with proper PYTHONPATH
         env = os.environ.copy()
-        # if is_python:
-        #     # Get the project root (2 directories up from the current file)
-        #     current_file = pathlib.Path(__file__)
-        #     project_root = str(current_file.parent.parent.parent.parent)
-            
-        #     # Add project root to PYTHONPATH
-        #     if "PYTHONPATH" in env:
-        #         # Use OS-specific path separator
-        #         env["PYTHONPATH"] = f"{project_root}{os.pathsep}{env['PYTHONPATH']}"
-        #     else:
-        #         env["PYTHONPATH"] = project_root
                 
-        #     logger.debug(f"Set PYTHONPATH: {env['PYTHONPATH']}")
-            
-        server_params = StdioServerParameters(
-            command=command,
-            args=[server_script_path],
-            env=env,
-        )
-        
+        server_url = os.getenv("MCP_SERVER_URL", "http://localhost:8000/sse")
 
-        stdio_transport = await self.exit_stack.enter_async_context(stdio_client(server_params))
-        self.stdio, self.write = stdio_transport
+  
+        self.stdio, self.write = await self.exit_stack.enter_async_context(
+            sse_client(server_url)
+        )
         
         self.list_roots_callback=OllamaListRootsFnT()
 
         self.session = await self.exit_stack.enter_async_context(ClientSession(self.stdio, self.write, list_roots_callback=self.list_roots_callback))
         
+        if self.session is None:
+            raise ValueError("Failed to create session")
+   
         logger.debug(f"client session: {self.session}")
         
         
@@ -139,23 +117,6 @@ class OllamaMCPClient(AbstractMCPClient):
         tool_results = []
         final_text = []
         
-        
-        # # Reasoning first (no tool calls)
-        # response = self._internal_ollama_client.chat(
-        #     model=os.getenv("OLLAMA_MODEL", "llama3.1:latest"),
-        #     messages=messages,
-        #     tools=self.tools,
-        # )
-        
-        # if response.message.content:
-        #     final_text.append(response.message.content)
-        
-    
-                
-        
-        
-        
-        # logger.debug(f"response: {response}")
 
         response = self._internal_ollama_client.chat(
             model=os.getenv("OLLAMA_MODEL", "llama3.1:latest"),
@@ -170,12 +131,6 @@ class OllamaMCPClient(AbstractMCPClient):
         if(self.session is None):
             raise ValueError("Session not initialized")
 
-        # if not response.message.tool_calls:
-        #     response = self._internal_ollama_client.chat(
-        #             model=os.getenv("OLLAMA_MODEL", "llama3.1:latest"),
-        #             messages=messages,
-        #         )
-            
         if response.message.content:
             final_text.append(response.message.content)
             
@@ -231,6 +186,7 @@ class OllamaMCPClient(AbstractMCPClient):
 
         while True:
             try:
+                               
                 folderProject = input("\nPlease provide the folder of your project: ").strip()
                 print("this is the folder project", folderProject)
                 
@@ -244,10 +200,10 @@ class OllamaMCPClient(AbstractMCPClient):
                 
                 instruction = input("\nWhat do you want to do with the file? (Profile or Optimize): ").strip()
                 
+                #query = input("Escribe algo...\n")
                 query = f"Please {instruction} the file {foundFile['path']}"
                 print(f"Query: {query}")
                 
-                #query = input("\nQuery: ").strip()
 
                 if query.lower() == 'quit':
                     break

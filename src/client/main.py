@@ -7,12 +7,12 @@ from logging_utils.base_logger import get_logger
 
 logger = get_logger(__name__)
 
-async def main(client: AbstractMCPClient, server_script_path: str):
+async def main(client: AbstractMCPClient):
     
 
     logger.debug("client initiated")
     try:
-        await client.connect_to_server(server_script_path)
+        await client.connect_to_server()
         logger.debug("connected to server")
         logger.debug("chat loop started")
         await client.chat_loop()
