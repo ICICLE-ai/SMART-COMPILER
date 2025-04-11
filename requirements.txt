@@ -1,0 +1,8 @@
+httpx
+uvicorn
+anyio
+starlette
+pydantic
+python-dotenv
+ollama
+mcp
