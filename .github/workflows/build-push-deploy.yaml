@@ -3,18 +3,23 @@
 ### Release-* methodology originally authored by Nathan Freeman (TACC) here:
 ### https://github.com/tapis-project/tapis-workflows/blob/prod/.github/workflows/ci.yml#L59
 # Description. This Github action runs when there are new commits to dev, stage, main, or release-*.
-# The action logs into GHCR with the Github action environment secrets `GHCR_USERNAME`
-# and `GHCR_TOKEN`.
+# The action logs into GHCR with the Github action environment secrets `CR_USERNAME`
+# and `CR_TOKEN`.
 # The action pulls the repo and builds the icicle-ai/store-closure-abm image and uses branch name as the
 # docker tag. In instance of `release-1.2.0`, sed will delete `release-`, leaving `1.2.0`.
 # If branch = main, tag becomes `latest` so latest is built.
 #
+
+### Secrets
+#   secrets.CR_TOKEN: Container Registry token
+#   secrets.TAPIS_ICICLE_PROD_TOKEN: Tapis Token (JWT)
+
 ### Variables
-#   vars.GHCR_USERNAME: Docker username
-#   secrets.GHCR_TOKEN: Docker token
-#   secrets.TAPIS_ICICLE_PROD_TOKEN: token for Tapis user
-#   vars.POD_ID: storeclosureabm
-#   vars.DEV_POD_ID: storeclosureabmdev
+#   vars.REGISTRY: Container Registry
+#   vars.IMAGE_NAME: Container Image name
+#   vars.CR_USERNAME: Container Registry username
+#   vars.POD_ID: Prod(Main) Tapis Pod ID
+#   vars.STAGE_POD_ID: Stageing Tapis Pod ID
 
 name: Build & Push & Deploy
 on:
@@ -23,7 +28,7 @@ on:
   workflow_dispatch:
 env:
   # Use docker.io for Docker Hub if empty
-  REGISTRY: ${{ vars.CONTAINER_REGISTRY }}
+  REGISTRY: ${{ vars.REGISTRY }}
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ vars.IMAGE_NAME }}
 
@@ -53,8 +58,8 @@ jobs:
         uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ vars.GHCR_USERNAME }}
-          password: ${{ secrets.GHCR_TOKEN }}
+          username: ${{ vars.CR_USERNAME }}
+          password: ${{ secrets.CR_TOKEN }}
         
       - name: Build & push tagged Docker backend image
         uses: docker/build-push-action@v3
