@@ -40,14 +40,15 @@ An example of how this file looks like.
 # .env
 OLLAMA_MODEL=llama3.1-smart-compiler:latest
 OLLAMA_HOST=http://localhost:11434
-MCP_SERVER_SCRIPT_PATH=<project_folder>/src/server_main.py
-MCP_SERVER_TRANSPORT=stdio
+MCP_SERVER_OLLAMA_MODEL=llama3.1:latest
+LOG_LEVEL=INFO
+MCP_SERVER_URL=http://localhost:8000/sse
 MCP_SERVER_HOST=0.0.0.0
 MCP_SERVER_PORT=8000
-MCP_SERVER_TRANSPORT=stdio
-MCP_SERVER_OLLAMA_MODEL=llama3.1:latest
-LOG_LEVEL=INFO # OR DEBUG
+MCP_SERVER_TRANSPORT=sse
+ALLOWED_PATHS="/mnt/d/workspace/python/smart-compiler/examples"
 ```
+
 
 Then type : export $(cat .env | xargs)
 
@@ -57,6 +58,18 @@ Then type : export $(cat .env | xargs)
 
 ## Running the project
 For running the project, once all dependencies and configurations are set, run the following command:
+
+## SERVER
+
+Run the server
+
+```bash
+python src/server_main.py
+
+```
+
+## CLIENT
+Run the client
 
 ```bash
 python src/main.py
