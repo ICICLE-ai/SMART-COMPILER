@@ -1,0 +1,4 @@
+**/__pycache__
+**/**.env
+!envs/.server.example.env
+!envs/.client.example.env

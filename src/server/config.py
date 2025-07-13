@@ -6,7 +6,7 @@ logger = get_logger(__name__)
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = os.getenv("PORT", 8000)
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
-OLLAMA_MODEL = os.getenv("MCP_SERVER_OLLAMA_MODEL", "llama3.1:8b")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
 MCP_SERVER_TRANSPORT = os.getenv("MCP_SERVER_TRANSPORT", "sse")
 ENABLE_REST_API = bool(os.getenv("ENABLE_REST_API", "false"))
 
