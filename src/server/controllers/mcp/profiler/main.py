@@ -3,6 +3,7 @@ from server.controllers.mcp.profiler.models import ProfileSingleCodeSnippetReque
 def profile_single_code_file(request: ProfileSingleCodeSnippetRequest) -> str:
     """
     This tool is used to profile the code.
+    
     """
     return """
     Profiler mock info:
@@ -14,7 +15,8 @@ def profile_single_code_file(request: ProfileSingleCodeSnippetRequest) -> str:
     - 10000000 lines of code
 """ 
 
-def profile_project(project_path: str) -> str:
+
+def profile_project(request: ProfileProjectRequest) -> str:
     """
     This tool is used to profile the project.
     """

@@ -2,7 +2,7 @@ from server.controllers.mcp.profiler.main import profile_single_code_file, profi
 from mcp.server.fastmcp import FastMCP
 
 tools = [
-    profile_single_code_file,
+    # profile_single_code_file,
     profile_project
 ]
 
