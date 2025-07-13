@@ -1,4 +1,4 @@
-from server.controllers.mcp.profiler.models import ProfileSingleCodeSnippetRequest, ProfileProjectRequest
+from server.controllers.mcp.profiler.dto import ProfileSingleCodeSnippetRequest, ProfileProjectRequest
 
 def profile_single_code_file(request: ProfileSingleCodeSnippetRequest) -> str:
     """

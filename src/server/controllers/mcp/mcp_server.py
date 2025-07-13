@@ -2,7 +2,7 @@ from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.server import Settings
 from mcp.server.sse import SseServerTransport
 from contextlib import asynccontextmanager
-from typing import Any, AsyncIterator
+from typing import Any, AsyncIterator, Literal
 from starlette.routing import Route, Mount
 from starlette.applications import Starlette
 from server.config import LOG_LEVEL, PORT, HOST
@@ -20,9 +20,13 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[Any]:
     logger.info("MCP server stopped")
 
 
+def get_mcp_log_level(log_level: str) -> Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
+    """Get the MCP log level from the log level"""
+    return "INFO" if log_level == "INFO" else "WARNING" if log_level == "WARNING" else "CRITICAL" if log_level == "CRITICAL" else "DEBUG" if log_level == "DEBUG" else "ERROR"
+
 mcp_settings = Settings(
     debug=True if LOG_LEVEL == "DEBUG" else False,
-    log_level=LOG_LEVEL,
+    log_level=get_mcp_log_level(LOG_LEVEL),
     host=HOST,
     port=PORT,
     lifespan=app_lifespan
