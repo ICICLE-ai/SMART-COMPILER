@@ -2,10 +2,15 @@ from fastapi import APIRouter, File, UploadFile, HTTPException, Depends, Form
 from typing import Annotated
 from server.controllers.rest.tasks.dto import (
     TaskResponse,
-    TaskType,
-    Language,
 )
-from server.repositories.files import FileRepository, get_file_repository
+from src.server.models.task import TaskType, ProgrammingLanguage, ProgramRuntimeOptions
+from server.infrastructure.persistence import FilePersistence, get_file_persistence
+from src.server.application.schedule_compiler_task import (
+    ScheduleCompilerTask,
+    get_schedule_compiler_task,
+)
+from src.server.models.task import CompilerTaskRequest, TaskId, TaskResult
+from src.server.repositories.tasks import TaskRepository, get_task_repository
 from shared.logging import get_logger
 
 logger = get_logger(__name__)
@@ -23,9 +28,11 @@ logger.debug("Profiler router initialized")
 )
 async def create_compiler_task(
     task_type: Annotated[TaskType, Form(...)],
-    language: Annotated[Language, Form(...)],
+    language: Annotated[ProgrammingLanguage, Form(...)],
+    runtime_options: Annotated[ProgramRuntimeOptions, Form(...)],
     file: UploadFile = File(...),
-    file_repository: FileRepository = Depends(get_file_repository),
+    file_persistence: FilePersistence = Depends(get_file_persistence),
+    schedule_compiler_task: ScheduleCompilerTask = Depends(get_schedule_compiler_task),
 ) -> TaskResponse:
     """
     Create and schedule a compiler task
@@ -42,14 +49,26 @@ async def create_compiler_task(
     file_content_str = file_content.decode("utf-8")
     logger.debug(f"File content: {file_content_str}")
 
-    file_id = file_repository.save_file(file.filename, file_content_str)
-
-    logger.debug(f"File ID: {file_id}")
+    try:
+        file_path = file_persistence.save_file(file.filename, file_content_str)
+        request = CompilerTaskRequest(
+            task_type=TaskType(task_type),
+            language=ProgrammingLanguage(language),
+            path=file_path,
+            runtime_options=runtime_options,
+        )
+        task = await schedule_compiler_task.execute(
+            request
+        )
+    except Exception as e:
+        file_persistence.delete_file(file_path)
+        logger.error(f"Error scheduling compiler task: {e}")
+        raise e
 
     return TaskResponse(
-        task_id="123",
-        task_status="pending",
-        task_result={"message": "Profile request received"},
+        task_id=task.task_id.value,
+        task_status=task.status.value,
+        task_result=TaskResult(file_path=task.result.file_path) if task.result else TaskResult(file_path=""),
     )
 
 
@@ -59,12 +78,16 @@ async def create_compiler_task(
     status_code=200,
     summary="Get the status of a compiler task",
 )
-def get_compiler_task(task_id: str) -> TaskResponse:
+async def get_compiler_task(task_id: str) -> TaskResponse:
+    task_repository: TaskRepository = await get_task_repository()
     """
     Get the status of a compiler task
     """
+    task = await task_repository.get_task(TaskId(task_id))
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
     return TaskResponse(
-        task_id=task_id,
-        task_status="pending",
-        task_result={"message": "Profile request received"},
+        task_id=task.task_id.value,
+        task_status=task.status.value,
+        task_result=task.result,
     )
