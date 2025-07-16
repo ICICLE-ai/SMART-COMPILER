@@ -1,5 +1,5 @@
 from typing import Optional
-from server.application.program_profiler.base import ProfileProgram
+from server.tools.program_profiler.base import Profiler, AugmentedProfiler
 from shared.logging import get_logger
 from pathlib import Path
 import subprocess 
@@ -7,11 +7,11 @@ from server.models.compiler import ProgramRuntimeOptions
 
 logger = get_logger(__name__)
 
-class ProfilePythonProgram(ProfileProgram):
-    def __init__(self, profiler: Optional[ProfileProgram]):
+class PythonProfiler(AugmentedProfiler):
+    def __init__(self, profiler: Optional[Profiler]):
         super().__init__(profiler)
 
-    async def _execute(self, file_path: str, profiling_options: ProgramRuntimeOptions):
+    async def _execute(self, file_path: str, runtime_options: Optional[ProgramRuntimeOptions]) -> Path:
         
 
         logger.info(f"Profiling Python program: {file_path}")
@@ -20,23 +20,31 @@ class ProfilePythonProgram(ProfileProgram):
         logger.info("Profiling Python program with cProfile")
         
         run_command = "python"
-        if profiling_options.command:
-            run_command = profiling_options.command
+        
+        if not runtime_options:
+            raise ValueError("Runtime options is None. Default value should've been default")
+        
+        if runtime_options.args is None:
+            raise ValueError("Runtime options args is None")
+        
+  
+        if runtime_options.command:
+            run_command = runtime_options.command
             
         base_path = Path(file_path).parent
         profile_file_path = f"{base_path}/profile.prof"
         
         run_args = ["-m", "cProfile", "-o", profile_file_path, file_path]
-        if profiling_options.args:
-            run_args.extend(profiling_options.args)
-            
+        if runtime_options.args:
+            run_args.extend(runtime_options.args)        
+                
         env = {}
-        if profiling_options.envs:
-            env.update(profiling_options.envs)
+        if runtime_options.envs:
+            env.update(runtime_options.envs)
         
         cwd = "."
-        if profiling_options.cwd:
-            cwd = profiling_options.cwd
+        if runtime_options.cwd:
+            cwd = runtime_options.cwd
         
         run_command = f"{run_command} {run_args}"
         if env:
@@ -54,4 +62,4 @@ class ProfilePythonProgram(ProfileProgram):
         logger.info(f"Profiling Python program: {file_path}")
         logger.debug(f"File path: {file_path}")
         
-        return profile_file_path
+        return Path(profile_file_path)

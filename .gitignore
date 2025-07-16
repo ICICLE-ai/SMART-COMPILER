@@ -2,3 +2,5 @@
 **/**.env
 !envs/.server.example.env
 !envs/.client.example.env
+
+files/**

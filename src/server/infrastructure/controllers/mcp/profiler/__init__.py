@@ -1,4 +1,4 @@
-from server.controllers.mcp.profiler.main import profile_single_code_file, profile_project
+from server.infrastructure.controllers.mcp.profiler.main import profile_single_code_file, profile_project
 from mcp.server.fastmcp import FastMCP
 
 tools = [

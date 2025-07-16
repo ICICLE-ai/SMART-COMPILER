@@ -8,7 +8,7 @@ from starlette.applications import Starlette
 from server.config import LOG_LEVEL, PORT, HOST
 
 from shared.logging import get_logger
-from server.controllers.mcp.profiler import register_tools as register_profiler_tools
+from server.infrastructure.controllers.mcp.profiler.api import register_api as register_profiler_api
 
 logger = get_logger(__name__)
 
@@ -35,7 +35,7 @@ mcp_settings = Settings(
 
 server  = FastMCP("SmartCompiler-MCP", settings=mcp_settings)
 
-register_profiler_tools(server)
+register_profiler_api(server)
 
 
 def create_sse_server(mcp: FastMCP):

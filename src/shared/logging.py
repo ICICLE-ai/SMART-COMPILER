@@ -34,7 +34,11 @@ class ColoredFormatter(logging.Formatter):
 def get_logger(name: str) -> logging.Logger:
     logger = logging.getLogger(name)
     handler = logging.StreamHandler(sys.stdout)
-    formatter = ColoredFormatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    
+    # if stdout is a tty, use colored formatter
+    # if sys.stdout.isatty():
+    formatter = ColoredFormatter('%(levelname)s:%(asctime)s\t%(message)s', datefmt='%Y-%m-%dT%H:%M')
+
     handler.setFormatter(formatter)
     logger.handlers = []
     logger.addHandler(handler)

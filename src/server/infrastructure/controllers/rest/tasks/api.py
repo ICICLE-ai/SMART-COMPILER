@@ -1,17 +1,20 @@
 from fastapi import APIRouter, File, UploadFile, HTTPException, Depends, Form
 from typing import Annotated
-from server.controllers.rest.tasks.dto import (
+from server.infrastructure.controllers.rest.tasks.dto import (
     TaskResponse,
 )
-from src.server.models.task import TaskType, ProgrammingLanguage, ProgramRuntimeOptions
-from server.infrastructure.persistence import FilePersistence, get_file_persistence
-from src.server.application.schedule_compiler_task import (
+from server.models.task import TaskType, ProgrammingLanguage, ProgramRuntimeOptions
+from server.infrastructure.services.persistence import FilePersistence, get_file_persistence
+from server.application.use_cases.schedule_compiler_task import (
     ScheduleCompilerTask,
     get_schedule_compiler_task,
 )
-from src.server.models.task import CompilerTaskRequest, TaskId, TaskResult
-from src.server.repositories.tasks import TaskRepository, get_task_repository
+from server.models.task import CompilerTaskRequest, TaskId, TaskResult
+from server.repositories.tasks import TaskRepository
 from shared.logging import get_logger
+from server.infrastructure.injections import get_task_repository, get_file_persistence, get_scheduler, get_profiler_tool_factory
+from apscheduler.schedulers.base import BaseScheduler
+from server.tools.program_profiler.factory import ProfilerToolFactory
 
 logger = get_logger(__name__)
 
@@ -29,10 +32,11 @@ logger.debug("Profiler router initialized")
 async def create_compiler_task(
     task_type: Annotated[TaskType, Form(...)],
     language: Annotated[ProgrammingLanguage, Form(...)],
-    runtime_options: Annotated[ProgramRuntimeOptions, Form(...)],
     file: UploadFile = File(...),
+    runtime_options: Annotated[ProgramRuntimeOptions | None, Form(...)]  = None,
     file_persistence: FilePersistence = Depends(get_file_persistence),
-    schedule_compiler_task: ScheduleCompilerTask = Depends(get_schedule_compiler_task),
+    scheduler: BaseScheduler = Depends(get_scheduler),
+    profiler_tool_factory: ProfilerToolFactory = Depends(get_profiler_tool_factory),
 ) -> TaskResponse:
     """
     Create and schedule a compiler task
@@ -55,13 +59,15 @@ async def create_compiler_task(
             task_type=TaskType(task_type),
             language=ProgrammingLanguage(language),
             path=file_path,
-            runtime_options=runtime_options,
+            runtime_options=runtime_options if runtime_options else None,
         )
-        task = await schedule_compiler_task.execute(
-            request
-        )
+        task = await ScheduleCompilerTask(
+            task_repository=get_task_repository(),
+            scheduler=scheduler,
+            profiler_tool_factory=profiler_tool_factory
+        ).execute(request)
     except Exception as e:
-        file_persistence.delete_file(file_path)
+        # file_persistence.remove(file_path)
         logger.error(f"Error scheduling compiler task: {e}")
         raise e
 
@@ -78,8 +84,7 @@ async def create_compiler_task(
     status_code=200,
     summary="Get the status of a compiler task",
 )
-async def get_compiler_task(task_id: str) -> TaskResponse:
-    task_repository: TaskRepository = await get_task_repository()
+async def get_compiler_task(task_id: str, task_repository: TaskRepository = Depends(get_task_repository)) -> TaskResponse:
     """
     Get the status of a compiler task
     """

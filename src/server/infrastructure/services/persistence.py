@@ -21,7 +21,7 @@ class FilePersistence(ABC):
         pass
 
     @abstractmethod
-    def delete_file(self, file_path: str) -> None:
+    def remove(self, path_str: str) -> None:
         pass
 
 
@@ -38,9 +38,15 @@ class InDiskFileRepository(FilePersistence):
             
         return file_path
 
-    def delete_file(self, file_path: str) -> None:
-        logger.debug(f"Deleting file: {file_path}")
-        Path(file_path).parent.rmdir()
+    def remove(self, path_str: str) -> None:
+        logger.debug(f"Deleting file: {path_str}")
+        path = Path(path_str)
+        if path.is_file():
+            path.unlink()
+        elif path.is_dir():
+            path.rmdir()
+        else:
+            raise FileNotFoundError(f"File or directory not found: {path_str}")
 
 singleton_file_persistence = InDiskFileRepository()
 
