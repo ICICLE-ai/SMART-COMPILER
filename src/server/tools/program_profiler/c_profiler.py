@@ -12,8 +12,8 @@ from typing import Optional
 logger = get_logger()
 
 DEFAULT_PROFILING_FILE_NAME = "c_profile.txt"
-GPROF_ARGS = ["-b"]
-# GPROF_ARGS = ["-p"] # For no verbose output
+# GPROF_ARGS = ["-b"]
+GPROF_ARGS = ["-p", "-b"] # For no verbose output
 
 
 class CProgramProfiler(AugmentedProfiler):
