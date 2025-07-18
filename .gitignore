@@ -4,6 +4,7 @@
 !envs/.server.example.env
 !envs/.client.example.env
 !envs/.local.mcp_server.example.env
+!envs/.mcp_local_server.example.env
 
 files/**
 db/**
