@@ -19,7 +19,8 @@ See [Astral Documentation](https://docs.astral.sh/uv) for installing the uv pack
 ### Packages
 After installing **uv** run: ```uv sync``` for syncing project dependencies. 
 
-**Important**: After `sync` you must install dependencies from the **requirements.txt** file. You can install them by running `uv pip install -r requirements.txt` 
+If you do not want to use `uv` for dependencies maangement, you can install dependencies from the **requirements.txt** file. 
+You can run `pip install -r requirements.txt` 
 
 ### Ollama
 To deploy a LLM using ollama first we need to install Ollama by following 

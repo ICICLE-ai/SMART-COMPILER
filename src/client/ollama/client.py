@@ -53,10 +53,9 @@ class OllamaMCPClient(AbstractMCPClient):
             server_script_path: Path to the server script (.py or .js)
         """
         
-        env = os.environ.copy()
-                
-        server_url = os.getenv("MCP_SERVER_URL", "http://localhost:8000")
 
+        server_url = os.getenv("MCP_SERVER_URL", "http://localhost:8000")
+        logger.debug(f"connecting to server at {server_url}")
   
         self.stdio, self.write = await self.exit_stack.enter_async_context(
             sse_client(server_url)

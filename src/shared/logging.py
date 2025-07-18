@@ -75,9 +75,24 @@ for uvicorn_logger in uvicorn_loggers:
 
 logger.handlers.clear()
 logger.addHandler(handler)
-logger.setLevel(os.getenv("LOG_LEVEL","INFO"))
-logger.propagate = False
 
+os_log_level = os.getenv("LOG_LEVEL", None)
+log_level = logging.INFO
+match os_log_level:
+    case "DEBUG":
+        log_level = logging.DEBUG
+    case "INFO":
+        log_level = logging.INFO
+    case "WARNING":
+        log_level = logging.WARNING
+    case "ERROR":
+        log_level = logging.ERROR
+    case _:
+        logger.warning(f"Invalid log level: {os_log_level}, using INFO")
+        log_level = logging.INFO
+
+logger.setLevel(log_level)
+logger.propagate = False
 
 
     
