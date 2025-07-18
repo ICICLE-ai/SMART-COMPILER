@@ -3,7 +3,10 @@
 **/**.env
 !envs/.server.example.env
 !envs/.client.example.env
+!envs/.local.mcp_server.example.env
 
 files/**
 db/**
 !db/.gitkeep
+
+.wvenv/**

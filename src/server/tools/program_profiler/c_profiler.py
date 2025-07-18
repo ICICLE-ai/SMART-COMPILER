@@ -2,7 +2,7 @@ from typing import Optional
 from server.tools.program_profiler.base import Profiler, AugmentedProfiler
 from shared.logging import get_logger
 from pathlib import Path
-import resource
+
 from server.models.compiler import ProgramRuntimeOptions
 import os
 from subprocess import run as run_command, CalledProcessError
@@ -10,6 +10,12 @@ import traceback
 from typing import Optional
 
 logger = get_logger()
+
+try:
+    import resource
+except ImportError:
+    logger.warning("Resource module not found, compilation limits will not be set.")
+    resource = None
 
 DEFAULT_PROFILING_FILE_NAME = "c_profile.txt"
 # GPROF_ARGS = ["-b"]
@@ -21,6 +27,9 @@ class CProgramProfiler(AugmentedProfiler):
         super().__init__(profiler)
         
     def _set_compilation_limits(self,  runtime_options: Optional[ProgramRuntimeOptions] = None):
+        if not resource:
+            return
+        
         if not runtime_options:
             return
         

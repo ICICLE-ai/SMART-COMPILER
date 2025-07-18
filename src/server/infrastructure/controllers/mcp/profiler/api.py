@@ -16,30 +16,15 @@ async def profile_code_snippet(
             ),
         ),
     ],
-    profiling_type: Annotated[
-        ProfilingType | None,
-        Field(
-            description=(
-                f"The type of profiling to use."
-                f"Possible values are: classical, augmented (for using classical and llm), llm"
-            ),
-            default=ProfilingType.CLASSICAL,
-        ),
-    ],
-    runtime_options: Annotated[
-        ProgramRuntimeOptions | None,
-        Field(
-            description="The runtime options to use for the profiling.",
-            default=None,
-        ),
-    ],
 ) -> str:
     """
     This tool is used to profile a certain code snippet. You must specify the programming language of the code snippet.
     """
+    
+
 
     profile_result_path = await get_profile_use_case().execute(
-        code_snippet, language, profiling_type, runtime_options
+        code_snippet, language
     )
     
     profile_content = profile_result_path.read_text()

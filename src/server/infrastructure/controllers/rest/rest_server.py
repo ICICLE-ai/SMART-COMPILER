@@ -1,11 +1,10 @@
 from fastapi import FastAPI
-import asyncio
-from server.infrastructure.controllers.rest.tasks.api import router as tasks_router
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 from shared.logging import get_logger
 from server.infrastructure.injections import get_scheduler
-
+from server.infrastructure.controllers.rest.tasks.api import router as tasks_router
+from server.infrastructure.controllers.rest.files.api import router as files_router
 
 logger = get_logger()
 
@@ -33,3 +32,4 @@ def health_check():
     return {"status": "ok"}
 
 app.include_router(tasks_router)
+app.include_router(files_router)
