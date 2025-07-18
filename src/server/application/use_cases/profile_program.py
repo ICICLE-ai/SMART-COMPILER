@@ -14,7 +14,7 @@ class ProfileProgram:
         
         uuid_str = str(uuid.uuid4())
         
-        temp_file_path = Path(f"/tmp/{uuid_str}.{language.value}")
+        temp_file_path = Path(f"tmp/{uuid_str}.{language.value}")
         
         temp_file_path.write_text(code_snippet)
         

@@ -146,17 +146,23 @@ ALLOWED_PATHS="{SOME_PATH}/smart-compiler/examples"
 ```
 
 Check if the server was properly deployed or connected to:
-![Example profiling request](docs/images/use_case_1_3.png)
+![Example profiling request](docs/images/use_case_1_1.png)
 
 
 Ask Claude to produce a certain code snippet...
-![Example profiling request](docs/images/use_case_1_1.png)
+![Example profiling request](docs/images/use_case_1_2.png)
 
 
 
 And then try to ask it to profile your code.
 
-![Example tool usage](docs/images/use_case_1_2.png)
+![Example tool usage](docs/images/use_case_1_3.png)
+
+Finally, we could try bigger datasets and other kind of conversations as can be observed here:
+
+![Profiling with Cursor + MCP Smart Compiler](docs/images/use_case_1_4.png)
+![Profiling with Cursor + MCP Smart Compiler](docs/images/use_case_1_5.png)
+![Profiling with Cursor + MCP Smart Compiler](docs/images/use_case_1_6.png)
 
 
 
