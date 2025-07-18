@@ -96,17 +96,21 @@ Then the smart compiler will ask which specific file will the smart compiler wor
 
 Then the smart compiler will ask which specific task to do: Profile or Optimize. Type what you would like to do with the program.
 
-### USE CASE
+## USE CASES
+### MCP Tool + Claude Desktop
+First we need to setup our variables in a certain local env, for example ```local.server.env```
 ```bash
-python src/main.py
-
-Please provide the folder of your project: /home/user/Desktop/SmartCompiler/examples/jacobi-2d
-Please provide the file you want to analyze: main.c
-File 'main.c' found in the project.
-
-What do you want to do with the file? (Profile or Optimize): Profile
+LOG_LEVEL=INFO
+OLLAMA_MODEL=llama3.1:latest
+OLLAMA_HOST=http://localhost:11434 # Or where you are hosting the model
+MCP_SERVER_HOST=0.0.0.0
+MCP_SERVER_PORT=8000
+MCP_SERVER_TRANSPORT=stdio #
+ENABLE_REST_API=false
+ALLOWED_PATHS="{SOME_PATH}/smart-compiler/examples"
 ```
-The profile information or the optimize C application will be stored in the same folder where the target project is located.
+
+
 
 ## Running from containers
 ### Building images.
