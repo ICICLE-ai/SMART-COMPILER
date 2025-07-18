@@ -3,9 +3,9 @@ from client.abstract.base_client import AbstractMCPClient
 import asyncio
 import sys
 
-from logging_utils.base_logger import get_logger
+from shared.logging import get_logger
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 async def main(client: AbstractMCPClient):
     
@@ -28,5 +28,5 @@ if __name__ == "__main__":
     server_script_path = sys.argv[1]
     client_factory = ClientFactory()
     client = client_factory.create_client("ollama")
-    asyncio.run(main(client, server_script_path))
+    asyncio.run(main(client))
 
