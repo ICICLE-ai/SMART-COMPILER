@@ -9,7 +9,7 @@ COPY . .
 
 #Remove client code
 RUN rm -rf src/client
-RUN rm -rf src/main.py
+RUN rm -rf src/run_client.py
 
 # Install from requirements.txt
 # Install dependencies
@@ -23,16 +23,17 @@ RUN rm -rf requirements.txt
 ENV MCP_SERVER_HOST=0.0.0.0
 ENV MCP_SERVER_PORT=8000
 ENV OLLAMA_HOST=http://localhost:11434
-ENV MCP_SERVER_OLLAMA_MODEL=llama3.1:latest
+ENV OLLAMA_MODEL=llama3.1:latest
 ENV MCP_SERVER_TRANSPORT=sse
 ENV LOG_LEVEL=INFO
+ENV ENABLE_REST_API=true
 
 # Create a directory inside the container
-RUN mkdir -p /app/allowed-path
-ENV ALLOWED_PATHS='/app/allowed-path'
+RUN mkdir -p /app/runtime-path
+ENV ALLOWED_PATHS='/app/runtime-path'
 
 # Expose port
 EXPOSE ${MCP_SERVER_PORT}
 
 # Start the MCP server
-CMD ["python", "src/server_main.py"]
+CMD ["python", "src/run_server.py"]

@@ -43,7 +43,7 @@ class OllamaProfiler(AugmentedProfiler):
         prompt = self._get_profiling_prompt(file_content, runtime_options)
         
         response = self.ollama_client.chat(
-            model=os.getenv("MCP_SERVER_OLLAMA_MODEL","llama3.1:latest"),
+            model=os.getenv("OLLAMA_MODEL","llama3.1:latest"),
             messages=[
                 {"role": "user", "content": prompt}
             ]

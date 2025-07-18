@@ -37,20 +37,30 @@ Once Ollama is installed deploy the Ollama server (if it was not deployed by the
 Set up the environment variables in a ```.env``` file.
 An example of how this file looks like.
 ```
+# For client, see envs/.client.example.env
 # .env
+LOG_LEVEL=INFO
 OLLAMA_MODEL=llama3.1-smart-compiler:latest
 OLLAMA_HOST=http://localhost:11434
-MCP_SERVER_OLLAMA_MODEL=llama3.1:latest
-LOG_LEVEL=INFO
 MCP_SERVER_URL=http://localhost:8000/sse
-MCP_SERVER_HOST=0.0.0.0
-MCP_SERVER_PORT=8000
-MCP_SERVER_TRANSPORT=sse
 ALLOWED_PATHS="/mnt/d/workspace/python/smart-compiler/examples"
 ```
 
+```
+For Server, see envs/.server.example.env
+LOG_LEVEL=INFO
+OLLAMA_MODEL=llama3.1:latest
+OLLAMA_HOST=http://localhost:11434
+MCP_SERVER_HOST=0.0.0.0
+MCP_SERVER_PORT=8000
+MCP_SERVER_TRANSPORT=sse
+ENABLE_REST_API=true
+ALLOWED_PATHS="/mnt/d/workspace/python/smart-compiler/examples"
 
-Then type : export $(cat .env | xargs)
+```
+
+
+Then type : export $(cat .env | xargs) on Linux to load the env variables or just source in Windows
 
 
 # How-To Guides
@@ -64,15 +74,19 @@ For running the project, once all dependencies and configurations are set, run t
 Run the server
 
 ```bash
-python src/server_main.py
+python src/run_server.py
 
 ```
 
 ## CLIENT
-Run the client
+Run the client.
+
+Note: This client is a simple version that extends Llama model for using tools. Since the client is not robust enough, we encourage you using other more robust tools such as Claude desktop, Copilot or ChatGPT with MCP tools.
+
+Smart compiler client is a PoC.
 
 ```bash
-python src/main.py
+python src/run_client.py
 
 ```
 
