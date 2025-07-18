@@ -7,3 +7,5 @@
 files/**
 db/**
 !db/.gitkeep
+
+.wvenv/**
