@@ -14,7 +14,12 @@ class ProfileProgram:
         
         uuid_str = str(uuid.uuid4())
         
-        temp_file_path = Path(f"tmp/{uuid_str}.{language.value}")
+        temp_file_path = Path(f"tmp/{uuid_str}/code_snippet.{language.value}")
+        if not temp_file_path.parent.exists():
+            temp_file_path.parent.mkdir(parents=True)
+        
+        if not temp_file_path.exists():
+            temp_file_path.touch(exist_ok=True)
         
         temp_file_path.write_text(code_snippet)
         

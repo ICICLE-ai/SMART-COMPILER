@@ -7,6 +7,10 @@ WORKDIR /app
 # Copy server code
 COPY . .
 
+# Install build tools and C libraries for compiling and running gprof
+RUN apk add --no-cache gcc musl-dev gcompat gdb binutils
+
+
 #Remove client code
 RUN rm -rf src/client
 RUN rm -rf src/run_client.py
