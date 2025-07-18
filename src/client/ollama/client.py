@@ -7,7 +7,7 @@ from mcp.client.sse import sse_client
 from ollama import Client
 from client.abstract.base_client import AbstractMCPClient
 
-from logging_utils.base_logger import get_logger
+from shared.logging import get_logger
 
 from dotenv import load_dotenv
 import os
@@ -19,12 +19,12 @@ from mcp.client.session import ListRootsFnT
 from mcp.shared.context import RequestContext
 from mcp.types import ListRootsResult, ErrorData, Root
 from pydantic import FileUrl
-from Preparation.preparation import FolderTree
+# from Preparation.preparation import FolderTree
 
 
 load_dotenv()
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 class OllamaListRootsFnT(ListRootsFnT):
     async def __call__(self, context: RequestContext[ClientSession, Any]) -> ListRootsResult | ErrorData:
@@ -53,10 +53,9 @@ class OllamaMCPClient(AbstractMCPClient):
             server_script_path: Path to the server script (.py or .js)
         """
         
-        env = os.environ.copy()
-                
-        server_url = os.getenv("MCP_SERVER_URL", "http://localhost:8000")
 
+        server_url = os.getenv("MCP_SERVER_URL", "http://localhost:8000")
+        logger.debug(f"connecting to server at {server_url}")
   
         self.stdio, self.write = await self.exit_stack.enter_async_context(
             sse_client(server_url)
@@ -187,23 +186,28 @@ class OllamaMCPClient(AbstractMCPClient):
         while True:
             try:
                                
-                folderProject = input("\nPlease provide the folder of your project: ").strip()
-                print("this is the folder project", folderProject)
+                # folderProject = input("\nPlease provide the folder of your project: ").strip()
+                # print("this is the folder project", folderProject)
                 
-                folderTree = FolderTree(folderProject)
-                folderFile = input("\nPlease provide the file you want to analyze: ").strip()
-                foundFile = folderTree.find_file(folderFile)
-                if foundFile is None:
-                    print(f"File '{folderFile}' not found in the project.")
-                    continue
-                print(f"File '{folderFile}' found in the project.")
+                # TODO: Add the folder tree as a tool
+                # folderTree = FolderTree(folderProject)
+                # folderFile = input("\nPlease provide the file you want to analyze: ").strip()
+                # foundFile = folderTree.find_file(folderFile)
+                # if foundFile is None:
+                #     print(f"File '{folderFile}' not found in the project.")
+                #     continue
+                # print(f"File '{folderFile}' found in the project.")
                 
-                instruction = input("\nWhat do you want to do with the file? (Profile or Optimize): ").strip()
+                # instruction = input("\nWhat do you want to do with the file? (Profile or Optimize): ").strip()
                 
                 #query = input("Escribe algo...\n")
-                query = f"Please {instruction} the file {foundFile['path']}"
-                print(f"Query: {query}")
+                # query = f"Please {instruction} the file {foundFile['path']}"
+                # query = f"Please {instruction}"
+                # print(f"Query: {query}")
                 
+                print("Start chatting... Type quit to exit")  
+                
+                query = input("You: ")
 
                 if query.lower() == 'quit':
                     break

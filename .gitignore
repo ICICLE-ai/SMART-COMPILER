@@ -1,0 +1,17 @@
+**/__pycache__
+**/__pycache__/**
+**/**.env
+!envs/.server.example.env
+!envs/.client.example.env
+!envs/.local.mcp_server.example.env
+!envs/.mcp_local_server.example.env
+
+files/**
+db/**
+!db/.gitkeep
+
+.wvenv/**
+
+out/**
+
+tmp/**

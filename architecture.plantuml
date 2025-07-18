@@ -1,63 +1,41 @@
 @startuml
 
-skinparam componentStyle uml1
-
-node "Local" {
-    actor user
-    interface "CLI-Chat" as SmartChat
-
-    
-
-   
-    cloud "Ollama" {
-        portin chat_port
-        component "OllamaServer" { 
-            [OllamaServer] -> chat_port
-        }
-    }
-
-   
-    
-
-    package "SmartCompiler" {
-        [SmartClient]
-        [SmartServer]
-        SmartChat - [SmartClient]
-        interface "list_tools" as ListTools
-        interface "call_tool" as ServerCallTool
-        [SmartClient] ..> () ListTools: use
-        ListTools - [SmartServer]
-        [SmartServer] - ServerCallTool
-        [SmartClient] ..> () ServerCallTool: use
-
-    }
-
-     package "SmartTools" {
-        [Optimizer]
-        interface "call_tool" as CallTool
-        CallTool - [ToolScheduler]
-        component "Profiler" {
-            [CProfiler]
-            [PythonProfiler]
-            [LLMProfiler]
-        }
-        interface "call" as CallOptimizer
-        interface "call" as CallProfiler
-        CallOptimizer - [Optimizer]
-        CallProfiler - [Profiler]
-        [ToolScheduler] ..> CallOptimizer : use
-        [ToolScheduler] ..> CallProfiler : use
-    }
-
-
-
-
+cloud "Infrastructure" as infrastructure1 {
+    portin chat_port
+    [OllamaServer] -> chat_port
 }
 
-user -> SmartChat
-[SmartClient] ..> chat_port
-[SmartServer] ..> chat_port
-[SmartServer] ..> CallTool : use
+interface "CLI-Chat" as SmartChat
 
+component "LLMChat" {
+    [LLMChat] -> chat_port
+    [LLMChat] - SmartChat
+}
+
+
+actor user
+SmartChat <- user : Provide code snippet
+
+
+interface "mcp" as mcp_api
+interface "api" as rest_api
+
+[LLMChat] --( mcp_api: sse/stdio
+
+
+component "Smart Compiler" {
+    interface "use" as tools_api
+    interface "use" as tools_mcp
+    [REST API] - rest_api
+    [MCP API] - mcp_api
+    [Tools] - tools_api
+    [MCP API] --( tools_mcp
+    [REST API] --( tools_api
+    tools_mcp -[Tools]
+}
+
+cloud "Infrastructure" as infrastructure2 {
+    rest_api )-- [ExternalSystem] 
+}
 
 @enduml
