@@ -1,7 +1,7 @@
 from server.tools.program_profiler.base import Profiler
 from server.tools.program_profiler.python_profiler import PythonProfiler
 from server.tools.program_profiler.ollama_profiler import OllamaProfiler
-from server.tools.program_profiler.c_profiler import ProfileCProgram
+from server.tools.program_profiler.c_profiler import CProgramProfiler
 from server.models.task import ProgrammingLanguage, ProfilingType
 from typing import Optional
 from shared.logging import get_logger
@@ -36,7 +36,7 @@ class ProfilerToolFactory:
                     else None
                 )
             case ProgrammingLanguage.C:
-                profiler = ProfileCProgram(
+                profiler = CProgramProfiler(
                     profiler=augmented_profiler
                     if profiling_type == ProfilingType.AUGMENTED
                     else None
