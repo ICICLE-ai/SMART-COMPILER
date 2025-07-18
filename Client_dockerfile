@@ -7,8 +7,8 @@ WORKDIR /app
 COPY . .
 
 #Remove client code
-RUN rm -rf src/tools
-RUN rm -rf src/server_main.py
+RUN rm -rf src/server
+RUN rm -rf src/run_server.py
 
 # Install from requirements.txt
 # Install dependencies
@@ -21,10 +21,9 @@ RUN rm -rf requirements.txt
 # Set environment variables for client to connect to Ollama and MCP server
 ENV OLLAMA_MODEL=llama3.1-smart-compiler:latest
 ENV OLLAMA_HOST=http://localhost:11434
-ENV MCP_SERVER_OLLAMA_MODEL=llama3.1:latest
 ENV LOG_LEVEL=INFO
-ENV MCP_SERVER_URL=http://localhost:8000
-ENV ALLOWED_PATHS='/app/allowed-path'
+ENV MCP_SERVER_URL=http://localhost:8000/sse
+ENV ALLOWED_PATHS='/app/runtime-path'
 
 # Start the client
-CMD ["python", "src/main.py"]
+CMD ["python", "src/run_client.py"]
