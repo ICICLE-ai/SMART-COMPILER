@@ -164,6 +164,11 @@ Finally, we could try bigger datasets and other kind of conversations as can be 
 ![Profiling with Cursor + MCP Smart Compiler](docs/images/use_case_1_5.png)
 ![Profiling with Cursor + MCP Smart Compiler](docs/images/use_case_1_6.png)
 
+Take a look at the entire example:
+
+[Chat history](docs/cursor_simple_python_snippet_for_matrix.md)
+
+
 
 
 
