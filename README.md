@@ -206,7 +206,7 @@ This is currently in development.
 Build the smart compiler server and client by running the scripts:
 
 ```bash
-docker build -f Server_dockerFile -t smart_server . #For SERVER
+docker build -f Server_dockerfile -t smart_server . #For SERVER
 docker build -f Client_dockerfile -t smart_client . #For Client
 ```
 
