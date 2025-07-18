@@ -36,7 +36,7 @@ def profile_project(
     path: Annotated[str, Field(description="The path to the project to profile")],
 ) -> str:
     """
-    This tool is used to profile the project.
+    This tool mocks the use of the profiler tool for an entire project. This is not real information, only for testing purposes.
     """
     return """
     Profiler mock info:
@@ -51,4 +51,4 @@ def profile_project(
 
 def register_api(server: FastMCP) -> None:
     server.add_tool(profile_code_snippet)
-    server.add_tool(profile_project)
+    # server.add_tool(profile_project)

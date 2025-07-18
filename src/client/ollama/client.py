@@ -186,8 +186,8 @@ class OllamaMCPClient(AbstractMCPClient):
         while True:
             try:
                                
-                folderProject = input("\nPlease provide the folder of your project: ").strip()
-                print("this is the folder project", folderProject)
+                # folderProject = input("\nPlease provide the folder of your project: ").strip()
+                # print("this is the folder project", folderProject)
                 
                 # TODO: Add the folder tree as a tool
                 # folderTree = FolderTree(folderProject)
@@ -198,13 +198,16 @@ class OllamaMCPClient(AbstractMCPClient):
                 #     continue
                 # print(f"File '{folderFile}' found in the project.")
                 
-                instruction = input("\nWhat do you want to do with the file? (Profile or Optimize): ").strip()
+                # instruction = input("\nWhat do you want to do with the file? (Profile or Optimize): ").strip()
                 
                 #query = input("Escribe algo...\n")
                 # query = f"Please {instruction} the file {foundFile['path']}"
-                query = f"Please {instruction}"
-                print(f"Query: {query}")
+                # query = f"Please {instruction}"
+                # print(f"Query: {query}")
                 
+                print("Start chatting... Type quit to exit")  
+                
+                query = input("You: ")
 
                 if query.lower() == 'quit':
                     break
