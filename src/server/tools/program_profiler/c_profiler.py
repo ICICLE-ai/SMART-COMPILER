@@ -33,10 +33,16 @@ class CProgramProfiler(AugmentedProfiler):
         if not runtime_options:
             return
         
-        if runtime_options.compilation_max_memory_in_mb:
-            resource.setrlimit(resource.RLIMIT_AS, (runtime_options.compilation_max_memory_in_mb * 1024 * 1024, runtime_options.compilation_max_memory_in_mb * 1024 * 1024))
-        if runtime_options.compilation_timeout_in_seconds:
-            resource.setrlimit(resource.RLIMIT_CPU, (runtime_options.compilation_timeout_in_seconds, runtime_options.compilation_timeout_in_seconds))
+        try:
+            if runtime_options.compilation_max_memory_in_mb:
+                resource.setrlimit(resource.RLIMIT_AS, (runtime_options.compilation_max_memory_in_mb * 1024 * 1024, runtime_options.compilation_max_memory_in_mb * 1024 * 1024))
+            if runtime_options.compilation_timeout_in_seconds:
+                resource.setrlimit(resource.RLIMIT_CPU, (runtime_options.compilation_timeout_in_seconds, runtime_options.compilation_timeout_in_seconds))
+        
+        except Exception as e:
+            logger.exception(f"Error setting compilation limits", e)
+            return
+
 
     async def _execute(self, file_path_str: str, runtime_options: ProgramRuntimeOptions) -> Path:
         

@@ -40,7 +40,7 @@ register_profiler_api(server)
 
 def create_sse_server(mcp: FastMCP):
     """Create a Starlette app that handles SSE connections and message handling"""
-    transport = SseServerTransport("/messages")
+    transport = SseServerTransport("/messages/")
 
     # Define handler functions
     async def handle_sse(request):
