@@ -111,15 +111,20 @@ Using Cursor to generate a code snippet for analysis.
 
 ### Profiling Code
 Request the Smart Compiler to profile your code via the MCP client. An example of tool usage is shown in the documentation.
+
 <img src="docs/images/use_case_1_3.png" alt="Asking Cursor to profile the code snippet" width="600"/>
 
 ### Advanced Usage
 Experiment with larger datasets and more complex interactions, as demonstrated in the documentation screenshots:
-<img src="docs/images/use_case_1_4.png" alt="Trying a larger dataset" width="600"/>
-<img src="docs/images/use_case_1_5.png" alt="Executing MCP tool" width="600"/>
-<img src="docs/images/use_case_1_6.png" alt="Cursor explaining profiling results" width="600"/>
 
-For a complete example, review the chat history in [Cursor + SmartCompiler example](`docs/cursor_simple_python_snippet_for_matrix.md`.)
+<img src="docs/images/use_case_1_4.png" alt="Trying a larger dataset" width="600"/>
+<br>
+<img src="docs/images/use_case_1_5.png" alt="Executing MCP tool" width="600"/>
+<br>
+<img src="docs/images/use_case_1_6.png" alt="Cursor explaining profiling results" width="600"/>
+<br>
+
+For a complete example, review the chat history in [Cursor + SmartCompiler example](docs/cursor_simple_python_snippet_for_matrix.md)
 
 **Summary**: This section covers setting up the Smart Compiler as an MCP tool, configuring environment variables, connecting with Cursor or Claude Desktop, verifying server deployment, generating code snippets, profiling code, and exploring advanced use cases with larger datasets.
 
@@ -145,16 +150,18 @@ ALLOWED_PATHS="/path/to/smart-compiler/examples"  # Specify the accessible direc
 Once the server is deployed, access the API documentation at `http://localhost:8000/docs`. For Postman collections, refer to the Smart Compiler GitHub repository.
 
 ### Scheduling a Profiling Task - IMT integration
-Schedule a profiling task to analyze a code snippet, such as the provided `examples/matrix-multiplication/main.py`. See the example:
+Schedule a profiling task to analyze a code snippet, such as the provided [example](examples/matrix-multiplication/main.py)
 
 <img src="docs/images/use_case_2_1.png" alt="Postman request for scheduling task" width="600"/>
 
 ### Checking Task Status
-Monitor the status of a scheduled profiling task, as shown in the screenshot
+Monitor the status of a scheduled profiling task, as shown in the screenshot.
+
 <img src="docs/images/use_case_2_2.png" width="600" alt="Monitoring task through the API"/>
 
 ### Retrieving Profiling Results
 Access profiling results via the API: 
+
 <img src="docs/images/use_case_2_3.png" width="600" alt="Getting profiling content"/>
 
 ### Scheduling an Optimization Task
