@@ -97,7 +97,7 @@ Then the smart compiler will ask which specific file will the smart compiler wor
 Then the smart compiler will ask which specific task to do: Profile or Optimize. Type what you would like to do with the program.
 
 ## USE CASES
-### MCP Tool + Claude Desktop
+### MCP Tool + Cursor or Claude Desktop
 First we need to setup our variables in a certain local env, for example ```local.server.env```
 ```bash
 LOG_LEVEL=INFO
@@ -109,6 +109,93 @@ MCP_SERVER_TRANSPORT=stdio #
 ENABLE_REST_API=false
 ALLOWED_PATHS="{SOME_PATH}/smart-compiler/examples"
 ```
+
+```json
+//cursor example
+{
+  "mcpServers": {
+    "smart_compiler": {
+      "url": "http://localhost:8000/sse",
+      "env": {}
+    }
+  }
+}
+
+// claude example...
+{
+  "mcpServers": {
+    "smart_compiler":{
+      "command": "uv",
+      "args": [
+        "--directory",
+        "{SMART_COMPILER_PATH}",
+        "run",
+        "src/run_server.py"
+      ],
+      "env": {
+        "UV_PROJECT_ENVIRONMENT": "{SMART_COMPILER_PATH}",
+        "UV_ENV_FILE": "{SMART_COMPILER_PATH}/envs/.local.mcp_server.env"
+      }
+    }
+  } 
+}
+
+```
+
+Check if the server was properly deployed or connected to:
+![Example profiling request](docs/images/use_case_1_3.png)
+
+
+Ask Claude to produce a certain code snippet...
+![Example profiling request](docs/images/use_case_1_1.png)
+
+
+
+And then try to ask it to profile your code.
+
+![Example tool usage](docs/images/use_case_1_2.png)
+
+
+
+
+### As a Monitoring Tools Provider
+First we need to setup our variables in a certain local env, for example ```local.server.env```
+
+We need to enable the flag **ENABLE_REST_API** which allows us to deploy the SmartCompiler API.
+
+```bash
+LOG_LEVEL=INFO
+OLLAMA_MODEL=llama3.1:latest
+OLLAMA_HOST=http://localhost:11434 # Or where you are hosting the model
+MCP_SERVER_HOST=0.0.0.0
+MCP_SERVER_PORT=8000
+MCP_SERVER_TRANSPORT=stdio #
+ENABLE_REST_API=true # MAKE SURE this is enabled
+ALLOWED_PATHS="{SOME_PATH}/smart-compiler/examples" #path the server will have access to
+```
+
+Once deployed, you will be able to see the documentation hosted at `http://localhost:8000/docs`.
+
+For trying our Postman collections, visit the [Smart Compiler GitHub repository](https://github.com/ICICLE-ai/smart-compiler).
+
+
+#### Scheduling a profiling task
+From a monitoring system, you can schedule a profiling task to collect information about a certain code snippet or program.
+
+For this example we will use one of the provided codes within this repository. You can find this code at `examples/matrix-multiplication/main.py`
+
+![Creating a profiling task](docs/images/use_case_2_1.png)
+
+Once the profiling task has been scheduled, you will be able to lookup its status:
+
+![Lookup a task](docs/images/use_case_2_2.png)
+
+Finally, we can get access to the profiling content through the API:
+
+![Lookup a task](docs/images/use_case_2_3.png)
+
+#### Scheduling an optimization task:
+This is currently in development.
 
 
 
@@ -157,11 +244,3 @@ National Science Foundation (NSF) funded AI institute for Intelligent Cyberinfra
 ### To create from Modelfile
 
 ```ollama create llama3.1-tool -f Modelfile```
-
-
-# Use case 1
-- 
-
-
-
-

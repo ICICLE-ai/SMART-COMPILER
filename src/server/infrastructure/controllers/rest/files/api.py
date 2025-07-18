@@ -1,8 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse
 from pathlib import Path
 
-router = APIRouter()
+router = APIRouter(prefix="/files")
 
 def get_media_type(file_extension: str) -> str:
     if file_extension == ".txt":
@@ -18,8 +18,8 @@ def get_media_type(file_extension: str) -> str:
     else:
         return "application/octet-stream"
 
-@router.get("/files/{file_path}", response_class=FileResponse, summary="Download a file", description="Download a file from the server")
-async def download_file(file_path: str):
+@router.get("/download", response_class=FileResponse, summary="Download a file", description="Download a file from the server")
+async def download_file(file_path: str = Query(..., description="The file path to download")):
     path = Path(file_path)
     
     if not path.is_file():
