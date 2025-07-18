@@ -6,7 +6,7 @@ from server.models.task import ProgrammingLanguage, ProfilingType
 from typing import Optional
 from shared.logging import get_logger
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 
 class ProfilerToolFactory:
@@ -16,8 +16,8 @@ class ProfilerToolFactory:
     ) -> Profiler:
 
         if profiling_type is None:
-            logger.warning("Profiling type is not set, using default: AUGMENTED")
-            profiling_type = ProfilingType.AUGMENTED
+            logger.warning("Profiling type is not set, using default: CLASSICAL")
+            profiling_type = ProfilingType.CLASSICAL
 
         logger.info(
             f"Getting profiler tool for language: {language} and profiling type: {profiling_type}"
@@ -27,23 +27,27 @@ class ProfilerToolFactory:
             return OllamaProfiler()
 
         augmented_profiler = OllamaProfiler()
+        profiler = None
+        match language:
+            case ProgrammingLanguage.PYTHON:
+                profiler = PythonProfiler(
+                    profiler=augmented_profiler
+                    if profiling_type == ProfilingType.AUGMENTED
+                    else None
+                )
+            case ProgrammingLanguage.C:
+                profiler = ProfileCProgram(
+                    profiler=augmented_profiler
+                    if profiling_type == ProfilingType.AUGMENTED
+                    else None
+                )
+        
+        if profiler is None:
+            logger.warning(f"No profiler tool found for language: {language} and profiling type: {profiling_type}")
+            logger.warning(f"Using augmented profiler class: {augmented_profiler.__class__.__name__}")
+            return augmented_profiler
+        
+        return profiler
 
-        if language == ProgrammingLanguage.PYTHON:
-            return PythonProfiler(
-                profiler=(
-                    augmented_profiler
-                    if profiling_type == ProfilingType.AUGMENTED
-                    else None
-                )
-            )
-        elif language == ProgrammingLanguage.C:
-            return ProfileCProgram(
-                profiler=(
-                    augmented_profiler
-                    if profiling_type == ProfilingType.AUGMENTED
-                    else None
-                )
-            )
-        else:
-            raise ValueError(f"Unsupported language: {language}")
-    
+        
+        

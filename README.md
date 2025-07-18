@@ -141,6 +141,9 @@ National Science Foundation (NSF) funded AI institute for Intelligent Cyberinfra
 ```ollama create llama3.1-tool -f Modelfile```
 
 
+# Use case 1
+- 
+
 
 
 

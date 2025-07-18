@@ -8,7 +8,7 @@ import sqlite3
 from uuid import uuid4
 from shared.logging import get_logger
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 
 class TaskRepository(ABC):

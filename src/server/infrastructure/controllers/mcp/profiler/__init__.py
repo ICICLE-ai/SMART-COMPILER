@@ -1,8 +1,8 @@
-from server.infrastructure.controllers.mcp.profiler.main import profile_single_code_file, profile_project
+from server.infrastructure.controllers.mcp.profiler.api import  profile_project, profile_code_snippet
 from mcp.server.fastmcp import FastMCP
 
 tools = [
-    profile_single_code_file,
+    profile_code_snippet,
     profile_project
 ]
 

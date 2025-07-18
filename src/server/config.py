@@ -1,7 +1,7 @@
 import os
 from shared.logging import get_logger
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 HOST = os.getenv("HOST", "0.0.0.0")

@@ -24,7 +24,7 @@ from pydantic import FileUrl
 
 load_dotenv()
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 class OllamaListRootsFnT(ListRootsFnT):
     async def __call__(self, context: RequestContext[ClientSession, Any]) -> ListRootsResult | ErrorData:

@@ -7,7 +7,7 @@ import uvicorn
 from server.config import MCP_SERVER_TRANSPORT, HOST, PORT, ENABLE_REST_API
 from shared.logging import get_logger
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 
 def main():

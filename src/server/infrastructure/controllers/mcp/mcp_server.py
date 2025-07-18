@@ -10,7 +10,7 @@ from server.config import LOG_LEVEL, PORT, HOST
 from shared.logging import get_logger
 from server.infrastructure.controllers.mcp.profiler.api import register_api as register_profiler_api
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 @asynccontextmanager
 async def app_lifespan(server: FastMCP) -> AsyncIterator[Any]:

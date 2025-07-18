@@ -1,3 +1,4 @@
+import asyncio
 from apscheduler.schedulers.base import BaseScheduler
 from datetime import datetime, timedelta
 from server.models.task import (
@@ -6,12 +7,71 @@ from server.models.task import (
     TaskType,
     TaskStatus,
     TaskResult,
+    TaskId,
+
 )
 from server.repositories.tasks import TaskRepository
 from shared.logging import get_logger
 from server.tools.program_profiler.factory import ProfilerToolFactory
+from server.infrastructure.injections import get_profiler_tool_factory, get_task_repository
 
-logger = get_logger(__name__)
+
+logger = get_logger()
+
+def _start_profiling_process(request: CompilerTaskRequest, taskId: TaskId):
+    asyncio.run(_start_profiling_task(request, taskId))
+
+async def _start_profiling_task(request: CompilerTaskRequest, taskId: TaskId):
+    logger.info(f"Starting profiling task for task id {taskId} with request {request}")
+    
+    tasks_repository = get_task_repository()
+    task = await tasks_repository.get_task(taskId)
+    if not task:
+        logger.error(f"Task {taskId} not found")
+        return
+    
+
+    try:
+        task.status = TaskStatus.RUNNING
+        task.updated_at = datetime.now()
+        await tasks_repository.update_task(task)
+        logger.info(f"Getting profile program for {task.path}")
+        profiler_tool_factory = get_profiler_tool_factory()
+        profiler_tool = await profiler_tool_factory.get_profiler_tool(
+                task.language,
+                request.task_options.profiling_type if request.task_options else None,
+            )
+
+        logger.info(f"Profiler tool: {profiler_tool}")
+        logger.info(f"Executing profiler tool for {task.path}")
+        profile_file_path = await profiler_tool.execute(
+                task.path, task.runtime_options
+            )
+        
+        
+        logger.info(f"Finished profiling task for {task.path}")
+        logger.info(f"Profiler tool result: {profile_file_path}")
+
+        task.status = TaskStatus.COMPLETED
+        task.result = TaskResult(file_path=str(profile_file_path), error=None)
+        task.updated_at = datetime.now()
+        
+        try:
+            await tasks_repository.update_task(task)
+            logger.info(f"Updated task: {task}")
+        except Exception as e:
+            logger.error(f"Error updating task: {e}")
+        
+    except Exception as e:
+        logger.error(f"Error scheduling profiling task for {taskId}: {e}")
+        task.status = TaskStatus.FAILED
+        task.result = TaskResult(file_path="", error=str(e))
+        task.updated_at = datetime.now()
+        
+        await tasks_repository.update_task(task)
+        logger.error(f"Updated task with error: {task}")
+    
+
 
 
 class ScheduleCompilerTask:
@@ -32,7 +92,8 @@ class ScheduleCompilerTask:
 
         if request.task_type == TaskType.PROFILE:
             logger.info(f"Starting profiling task for {request.path} with task id {task.task_id}")
-            job = self.scheduler.add_job(self._start_profiling_task, 'date', run_date=datetime.now() + timedelta(seconds=10), args=[request, task])
+            logger.debug(f"Scheduler state: {self.scheduler.state}")
+            job = self.scheduler.add_job(_start_profiling_process, 'date', run_date=datetime.now() + timedelta(seconds=10), args=[request, task.task_id])
             updated_task = CompilerTask(
                 task_id=task.task_id,
                 status=TaskStatus.PENDING,
@@ -51,41 +112,7 @@ class ScheduleCompilerTask:
         
         return task
 
-    async def _start_profiling_task(self, request: CompilerTaskRequest, task: CompilerTask):
-        try:
-            task.status = TaskStatus.RUNNING
-            task.updated_at = datetime.now()
-            await self.task_repository.update_task(task)
-            logger.info(f"Getting profile program for {request.path}")
-            profiler_tool = await self.profiler_tool_factory.get_profiler_tool(
-                    request.language,
-                    request.task_options.profiling_type if request.task_options else None,
-                )
-
-            result = await profiler_tool.execute(
-                    request.path, request.runtime_options
-                )
-            
-            logger.info(f"Finished profiling task for {request.path}")
-            task.status = TaskStatus.COMPLETED
-            task.result = TaskResult(file_path=str(result), error=None)
-            task.updated_at = datetime.now()
-            
-            try:
-                await self.task_repository.update_task(task)
-                logger.debug(f"Updated task: {task}")
-            except Exception as e:
-                logger.error(f"Error updating task: {e}")
-            
-        except Exception as e:
-            logger.error(f"Error scheduling profiling task for {request.path}: {e}")
-            task.status = TaskStatus.FAILED
-            task.result = TaskResult(file_path="", error=str(e))
-            task.updated_at = datetime.now()
-            
-            await self.task_repository.update_task(task)
-        
-
+    
 async def get_schedule_compiler_task(task_repository: TaskRepository, scheduler: BaseScheduler, profiler_tool_factory: ProfilerToolFactory) -> ScheduleCompilerTask:
     return ScheduleCompilerTask(
         task_repository,

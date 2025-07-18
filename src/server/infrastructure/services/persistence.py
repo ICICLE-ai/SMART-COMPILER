@@ -3,7 +3,7 @@ from shared.logging import get_logger
 from abc import ABC, abstractmethod
 from uuid import uuid4
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 class FilePersistence(ABC):
     @abstractmethod

@@ -4,8 +4,10 @@ from abc import ABC, abstractmethod
 from server.models.compiler import ProgramRuntimeOptions
 from pathlib import Path
 
-logger = get_logger(__name__)
+logger = get_logger()
 
+
+DEFAULT_PROFILING_FILE_NAME = "profiling.txt"
 
 class Profiler(ABC):
     @abstractmethod
@@ -21,6 +23,7 @@ class Profiler(ABC):
             Path: result_path: The path to the file containing the result of the profiling.
         """
         pass
+    
 
 class AugmentedProfiler(Profiler, ABC):
     def __init__(self, profiler: Optional[Profiler] = None):
@@ -37,7 +40,7 @@ class AugmentedProfiler(Profiler, ABC):
         local_profiling_path = await self._execute(file_path, runtime_options)
         
         base_path = Path(file_path).parent
-        profiling_path = f"{base_path}/profiling.txt"
+        profiling_path = f"{base_path}/{DEFAULT_PROFILING_FILE_NAME}"
         profiling_content = ""
         
         if profiling_path_result:

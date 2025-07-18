@@ -1,18 +1,19 @@
 import sqlite3
 from datetime import datetime
-from server.models.task import CompilerTask, CompilerTaskRequest, TaskId, TaskStatus
+from server.models.task import CompilerTask, CompilerTaskRequest, ProgrammingLanguage, TaskId, TaskStatus, TaskType
 from server.repositories.tasks import TaskRepository
-from server.models.task import CompilerTaskEncoder, CompilerTaskDecoder
+from server.models.task import CompilerTaskEncoder, CompilerTaskDecoder, ProgramRuntimeOptions
 from shared.logging import get_logger
 from uuid import uuid4
 import json
 
-logger = get_logger(__name__)
+logger = get_logger()
+
 
 
 class SQLiteTaskRepository(TaskRepository):
     def __init__(self):
-        self.conn = sqlite3.connect("tasks.db")
+        self.conn = sqlite3.connect("db/tasks.db")
         self.conn.execute(
             """
             CREATE TABLE IF NOT EXISTS tasks (
@@ -54,7 +55,7 @@ class SQLiteTaskRepository(TaskRepository):
                 task.created_at,
                 task.updated_at,
                 task.status.value,
-                json.dumps(task.runtime_options) if task.runtime_options else None,
+                json.dumps(task.runtime_options, cls=CompilerTaskEncoder) if task.runtime_options else None,
                 None,
                 task.internal_job_id,
             ),
@@ -84,22 +85,19 @@ class SQLiteTaskRepository(TaskRepository):
         if row is None:
             return None
                 
-        logger.info(f"Row[7]: {row[7]}")
-        logger.info(f"Row[8]: {row[8]}")
-        
         runtime_options = json.loads(row[7], cls=CompilerTaskDecoder) if row[7] else None
         result = json.loads(row[8], cls=CompilerTaskDecoder) if row[8] else None
         internal_job_id = row[9] if row[9] else None
         
         return CompilerTask(
             task_id=TaskId(value=row[0]),
-            task_type=row[1],
-            language=row[2],
+            task_type=TaskType(value=row[1]),
+            language= ProgrammingLanguage(value=row[2]),
             path=row[3],
-            created_at=row[4],
-            updated_at=row[5],
-            status=row[6],
-            runtime_options=runtime_options,
+            created_at=datetime.strptime(row[4], "%Y-%m-%d %H:%M:%S.%f"),
+            updated_at=datetime.strptime(row[5], "%Y-%m-%d %H:%M:%S.%f") if row[5] else None,
+            status=TaskStatus(value=row[6]),
+            runtime_options=ProgramRuntimeOptions.from_json(runtime_options) if runtime_options else None,
             result=result,
             internal_job_id=internal_job_id,
         )

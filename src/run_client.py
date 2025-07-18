@@ -6,7 +6,7 @@ from shared.logging import get_logger
 
 load_dotenv()
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 
 async def main():

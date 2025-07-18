@@ -5,11 +5,19 @@ from enum import Enum
 from typing import Optional, List
 
 from server.models.compiler import ProgramRuntimeOptions
+from shared.logging import get_logger
+
+logger = get_logger()
 
 class TaskType(Enum):
     PROFILE = "profile"
     OPTIMIZE = "optimize"
     
+    def __repr__(self):
+        return self.value
+    
+    def __str__(self):
+        return self.value
 
     
 class ProgrammingLanguage(Enum):
@@ -23,10 +31,21 @@ class TaskStatus(Enum):
     COMPLETED = "completed"
     FAILED = "failed"
 
+    def __repr__(self):
+        return self.value
+    
+    def __str__(self):
+        return self.value
 
 @dataclass(frozen=True)
 class TaskId():
     value: str
+    
+    def __repr__(self):
+        return self.value
+    
+    def __str__(self):
+        return self.value
     
     def __post_init__(self):
         if not self.value:
@@ -34,7 +53,7 @@ class TaskId():
 
 @dataclass
 class TaskResult():
-    file_path: str
+    file_path: Optional[str] = None
     error: Optional[str] = None
 
 @dataclass
@@ -55,6 +74,12 @@ class ProfilingType(Enum):
     CLASSICAL = "classical"
     LLM = "llm"
     AUGMENTED = "augmented"
+    
+    def __repr__(self):
+        return self.value
+    
+    def __str__(self):
+        return self.value
     
     
 
@@ -94,20 +119,31 @@ class CompilerTaskEncoder(JSONEncoder):
     
 class CompilerTaskDecoder(JSONDecoder):
     def default(self, o):
-        if isinstance(o, dict):
-            return CompilerTask(**o)
-        elif isinstance(o, dict):
-            return ProgramRuntimeOptions(**o)
-        elif isinstance(o, dict):
-            return TaskResult(**o)
-        elif isinstance(o, str):
-            return TaskId(o)
-        elif isinstance(o, str):
-            return TaskType(o)
-        elif isinstance(o, str):
-            return ProgrammingLanguage(o)
-        elif isinstance(o, str):
-            return TaskStatus(o)
-        elif isinstance(o, str):
-            return ProfilingType(o)
-        return o
+        logger.debug(f"CompilerTaskDecoder default: {o}")
+        if not isinstance(o, dict):
+            return o
+
+        # TODO: from here everything is dict.
+        if "file_path" in o and "error" in o:
+            logger.debug(f"TaskResult decoder: {o}")
+            return TaskResult(file_path=o.get("file_path", None), error=o.get("error", None))
+        
+        elif "command" in o or "args" in o or "envs" in o or "cwd" in o or "timeout_in_seconds" in o or "max_memory_in_mb" in o or "compilation_args" in o or "compilation_command" in o or "compilation_envs" in o or "compilation_cwd" in o or "compilation_max_memory_in_mb" in o or "compilation_timeout_in_seconds" in o or "compilation_max_memory" in o:
+            logger.debug(f"ProgramRuntimeOptions decoder: {o}")
+            return ProgramRuntimeOptions(
+                command=o.get("command", None),
+                args=o.get("args", None),
+                envs=o.get("envs", None),
+                cwd=o.get("cwd", None),
+                timeout_in_seconds=o.get("timeout", None),
+                max_memory_in_mb=o.get("max_memory", None),
+                compilation_args=o.get("compilation_args", None),
+                compilation_envs=o.get("compilation_envs", None),
+                compilation_cwd=o.get("compilation_cwd", None),
+                compilation_max_memory_in_mb=o.get("compilation_max_memory_in_mb", None),
+                compilation_timeout_in_seconds=o.get("compilation_timeout", None),
+            )
+        
+        raise ValueError(f"Unknown decoder: {o}")
+    
+    
