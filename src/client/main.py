@@ -28,5 +28,5 @@ if __name__ == "__main__":
     server_script_path = sys.argv[1]
     client_factory = ClientFactory()
     client = client_factory.create_client("ollama")
-    asyncio.run(main(client, server_script_path))
+    asyncio.run(main(client))
 
