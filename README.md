@@ -44,7 +44,7 @@ The Smart Compiler leverages AI models alongside traditional compiler techniques
 
 ## Getting Started as an MCP Tool with Cursor or Claude Desktop
 
-This section guides you through setting up and using the Smart Compiler as an MCP (Machine Compiler Platform) tool alongside Cursor or Claude Desktop for code profiling and optimization.
+This section guides you through setting up and using the Smart Compiler as an MCP (Model Context Protocol) tool alongside Cursor or Claude Desktop for code profiling and optimization.
 
 ### Server Setup
 Configure the required environment variables in a local `.env` file, such as `.local.server.env`, to enable the MCP server.
@@ -54,8 +54,8 @@ Configure the required environment variables in a local `.env` file, such as `.l
 LOG_LEVEL=INFO
 OLLAMA_MODEL=llama3.1:latest
 OLLAMA_HOST=http://localhost:11434  # Adjust to your model's hosting address
-MCP_SERVER_HOST=0.0.0.0
-MCP_SERVER_PORT=8000
+MCP_SERVER_HOST=0.0.0.0 #used for both, rest api and mcp servers
+MCP_SERVER_PORT=8000 #for mcp and rest
 MCP_SERVER_TRANSPORT=stdio
 ENABLE_REST_API=false
 ALLOWED_PATHS="/path/to/smart-compiler/examples"  # Specify the accessible directory
@@ -128,9 +128,9 @@ For a complete example, review the chat history in [Cursor + SmartCompiler examp
 
 **Summary**: This section covers setting up the Smart Compiler as an MCP tool, configuring environment variables, connecting with Cursor or Claude Desktop, verifying server deployment, generating code snippets, profiling code, and exploring advanced use cases with larger datasets.
 
-## Using Smart Compiler as a Monitoring Tools Provider
+## Using Smart Compiler as a REST Service
 
-This section explains how to deploy the Smart Compiler as a monitoring tool by enabling its REST API for profiling tasks.
+This section explains how to deploy the Smart Compiler as part of monitoring environment by enabling its REST API for compiler tasks.
 
 ### Environment Setup for REST API
 Configure the environment variables in `local.server.env` and enable the REST API.
@@ -139,7 +139,7 @@ Configure the environment variables in `local.server.env` and enable the REST AP
 LOG_LEVEL=INFO
 OLLAMA_MODEL=llama3.1:latest
 OLLAMA_HOST=http://localhost:11434  # Adjust to your model's hosting address
-MCP_SERVER_HOST=0.0.0.0
+MCP_SERVER_HOST=0.0.0.0 #used for mcp and rest servers
 MCP_SERVER_PORT=8000
 MCP_SERVER_TRANSPORT=stdio
 ENABLE_REST_API=true  # Enable REST API
@@ -187,6 +187,7 @@ python run src/run_client.py
 uv run src/run_client.py
 ```
 
+Note: The client implemented in the SmartCompiler project is a PoC of a client.  For more advanced uses, we recommend trying it out with platforms focused on MCP tools such as Cursor, Claude Desktop or Github Copilot.
 
 --- 
 
