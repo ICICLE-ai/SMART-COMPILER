@@ -183,7 +183,7 @@ Start playing with the Smart Compiler!
 Build the smart compiler server and client by running the scripts:
 
 ```bash
-docker build -f Server_dockerfile -t smart_server . #For SERVER
+docker build -f Dockerfile -t smart_server . #For SERVER
 docker build -f Client_dockerfile -t smart_client . #For Client
 ```
 
