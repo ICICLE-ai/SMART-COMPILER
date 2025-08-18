@@ -159,7 +159,25 @@ Then the smart compiler will ask which specific task to do: Profile or Optimize.
 
 
 
-## Running from containers
+## Option A: Running from a single container
+### Building image.
+Build the smart compiler server, client and Ollama by running the script:
+```bash
+docker compose up -d --build
+```
+
+### Start an interactive sesion.
+```bash
+docker attach smart_client
+```
+
+Start playing with the Smart Compiler!
+
+
+
+
+## Option B: Running from a two different containers
+
 ### Building images.
 
 Build the smart compiler server and client by running the scripts:
