@@ -205,7 +205,7 @@ class OllamaMCPClient(AbstractMCPClient):
                 # query = f"Please {instruction}"
                 # print(f"Query: {query}")
                 
-                print("Start chatting... Type quit to exit")  
+                print("Start chatting... Type quit to exit\n")  
                 
                 query = input("You: ")
 
@@ -213,7 +213,7 @@ class OllamaMCPClient(AbstractMCPClient):
                     break
 
                 response = await self.process_query(query)
-                print("\n" + response)
+                print("\n" + response + "\n")
 
             except Exception as e:
                 logger.error(f"\nError: {str(e)}")
