@@ -45,7 +45,7 @@ services:
     container_name: smart_server
     build:
       context: .
-      dockerfile: Server_dockerfile
+      dockerfile: Dockerfile
     image: smart_server:latest
     environment:
       MCP_SERVER_HOST: "0.0.0.0"
