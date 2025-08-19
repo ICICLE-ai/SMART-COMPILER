@@ -173,7 +173,28 @@ docker attach smart_client
 
 Start playing with the Smart Compiler!
 
+## IMPORTANT NOTE: 
 
+In case thwere is an error that says : "llama3.1-smart-compiler:latest" not found"
+Type the following commands:
+```bash
+docker compose exec ollama sh -lc 'ollama pull llama3.1'
+docker compose exec ollama sh -lc 'ollama create llama3.1-smart-compiler -f /workspace/ollama-smart-compiler-Modelfile'
+```
+And then restart the client:
+
+```bash
+docker compose restart client
+```
+
+and 
+
+### Start an interactive sesion.
+```bash
+docker attach smart_client
+```
+
+Start playing with the Smart Compiler!
 
 
 ## Option B: Running from a two different containers
