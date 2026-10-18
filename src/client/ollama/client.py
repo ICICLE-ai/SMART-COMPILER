@@ -97,86 +97,125 @@ class OllamaMCPClient(AbstractMCPClient):
 
 
     async def process_query(self, query: str) -> str:
-        """Process a query using LLM and available tools"""
-        system_prompt = f"""
-            You are a helpful assistant expert in compilers. You're name is SColer.
-        """
-        
+        """Process a query with Ollama, executing MCP tool calls as needed."""
+        system_prompt = """
+You are SColer, an assistant specializing in compilers and C optimization.
+Use the provided MCP tools whenever they can perform the requested work.
+For a request to optimize a C file by path, call get_file_content with the exact path first, then call optimize_code_snippet with the returned C source and the requested profile. Never pass a file path or tool name as code_snippet. If the model mistakenly asks to optimize a path directly, the client will read that file before calling Cetus.
+Available profiles include parallel, paw_tiling_nt, paw_tiling_lrw, paw_tiling_fixed32, reuse_analysis, and loop_interchange. Use parallel when the request does not name a profile.
+Do not substitute GCC or LLVM shell commands for Cetus. Do not invent tool results or claim an optimization succeeded unless the tool returned the result.
+""".strip()
+
         messages = [
-            {
-                "role": "system",
-                "content": system_prompt
-            },
-            {
-                "role": "user",
-                "content": query
-            }
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": query},
         ]
-        # Process response and handle tool calls
-        tool_results = []
-        final_text = []
-        
-
-        response = self._internal_ollama_client.chat(
-            model=os.getenv("OLLAMA_MODEL", "llama3.1:latest"),
-            messages=messages,
-            tools=self.tools,
-        )
-        
-        logger.debug(f"response: {response}")
-
-   
-        
-        if(self.session is None):
+        if self.session is None:
             raise ValueError("Session not initialized")
 
-        if response.message.content:
-            final_text.append(response.message.content)
-            
-        elif response.message.tool_calls:
-            for tool in response.message.tool_calls:
+        model = os.getenv("OLLAMA_MODEL", "llama3.1:latest")
+        final_text = []
+        last_file_read = None
+
+        def result_text(result: Any) -> str:
+            parts = []
+            for item in result.content:
+                if item.type == "text":
+                    parts.append(item.text)
+                elif item.type == "image":
+                    parts.append("[Tool returned an image]")
+                elif item.type == "resource":
+                    resource = item.resource
+                    parts.append(
+                        resource.text
+                        if isinstance(resource, TextResourceContents)
+                        else str(resource.blob)
+                    )
+            return "\n".join(parts) or "Tool returned no text."
+
+        for _ in range(8):
+            response = self._internal_ollama_client.chat(
+                model=model,
+                messages=messages,
+                tools=self.tools,
+            )
+            message = response.message
+            logger.debug(f"response: {response}")
+
+            if not message.tool_calls:
+                if message.content:
+                    final_text.append(message.content)
+                break
+
+            messages.append(message.model_dump(exclude_none=True))
+            for tool in message.tool_calls:
                 tool_name = tool.function.name
-                tool_args = tool.function.arguments
+                tool_args = dict(tool.function.arguments)
+                if tool_name == "optimize_code_snippet" and "profile" in tool_args:
+                    tool_args.setdefault("optimization_profile", tool_args.pop("profile"))
+                if tool_name == "optimize_code_snippet" and last_file_read is not None:
+                    tool_args["code_snippet"] = last_file_read
 
-                # Execute tool call
-                result = await self.session.call_tool(tool_name, dict(tool_args))
-                tool_results.append({"call": tool_name, "result": result})
-                final_text.append(f"[Calling tool {tool_name} with args {tool_args}]")
+                if tool_name == "optimize_code_snippet":
+                    snippet = str(tool_args.get("code_snippet") or "").strip()
+                    path = tool_args.pop("path", None)
+                    file_placeholder = not snippet or (
+                        len(snippet) < 256
+                        and ("get_file_content" in snippet.lower() or snippet == "read_file")
+                    )
+                    if not path and (file_placeholder or snippet.endswith(".c")):
+                        for token in query.split():
+                            candidate = token.strip(" \t\r\n\"'`.,:;()[]{}<>")
+                            if candidate.startswith("/") and candidate.endswith(".c"):
+                                path = candidate
+                                break
 
-                content = result.content[0]
-                if(content.type == "text"):
-                    # Continue conversation with tool results
-                    messages.append({
-                        "role": "user",
-                        "content": content.text
-                    })
-                    
-                elif(content.type == "image"):
-                    # Continue conversation with tool results
-                    messages.append({
-                        "role": "user",
-                        "content": content.data
-                    })
-                elif(content.type == "resource"):
-                    resource = content.resource
-                    content_data = resource.text if isinstance(resource, TextResourceContents) else resource.blob
-                    # Continue conversation with tool results
-                    messages.append({
-                        "role": "user",
-                        "content": content_data
-                    })
+                    if path and (file_placeholder or snippet == str(path)):
+                        path = str(path)
+                        read_result = await self.session.call_tool(
+                            "get_file_content", {"path": path}
+                        )
+                        read_text = result_text(read_result)
+                        final_text.append(
+                            f"[Calling tool get_file_content with path {path}]"
+                        )
+                        if getattr(read_result, "isError", False):
+                            final_text.append(read_text)
+                            return "\n".join(final_text)
 
-                response = self._internal_ollama_client.chat(
-                    model=os.getenv("OLLAMA_MODEL", "llama3.1:latest"),
-                    messages=messages,
-                )
+                        profile = tool_args.get("optimization_profile", "parallel")
+                        result = await self.session.call_tool(
+                            "optimize_code_snippet",
+                            {
+                                "code_snippet": read_text,
+                                "optimization_profile": profile,
+                            },
+                        )
+                        final_text.append(
+                            f"[Calling tool optimize_code_snippet with profile {profile}]"
+                        )
+                        final_text.append(result_text(result))
+                        return "\n".join(final_text)
 
-                final_text.append(response.message.content)
+                result = await self.session.call_tool(tool_name, tool_args)
+                text = result_text(result)
+                if tool_name == "get_file_content" and not getattr(result, "isError", False):
+                    last_file_read = text
+                if tool_name == "optimize_code_snippet":
+                    profile = tool_args.get("optimization_profile", "parallel")
+                    final_text.append(
+                        f"[Calling tool optimize_code_snippet with profile {profile}]"
+                    )
+                else:
+                    final_text.append(f"[Calling tool {tool_name} with args {tool_args}]")
+                final_text.append(text)
+                messages.append({"role": "tool", "content": text})
+                if tool_name == "optimize_code_snippet":
+                    return "\n".join(final_text)
+        else:
+            final_text.append("Stopped after 8 MCP tool rounds.")
 
         return "\n".join(final_text)
-
-
-
 
     async def chat_loop(self):
         """Run an interactive chat loop"""
