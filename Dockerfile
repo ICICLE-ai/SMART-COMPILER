@@ -8,7 +8,8 @@ WORKDIR /app
 COPY . .
 
 # Install build tools and C libraries for compiling and running gprof
-RUN apk add --no-cache gcc musl-dev gcompat gdb binutils
+RUN apk add --no-cache gcc musl-dev gcompat gdb binutils openjdk21-jre \
+    && java -version
 
 
 #Remove client code

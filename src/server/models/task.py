@@ -68,6 +68,7 @@ class CompilerTask():
     status: TaskStatus
     result: TaskResult | None
     internal_job_id: Optional[str] = None
+    optimization_profile: Optional[str] = None
 
 
 class ProfilingType(Enum):
@@ -95,6 +96,7 @@ class CompilerTaskRequest():
     path: str
     runtime_options: Optional[ProgramRuntimeOptions] = None
     task_options: Optional[TaskOptions] = None
+    optimization_profile: Optional[str] = None
     
     
 class CompilerTaskEncoder(JSONEncoder):

@@ -56,10 +56,17 @@ services:
       LOG_LEVEL: "INFO"
       ENABLE_REST_API: "true"
       ALLOWED_PATHS: "/app/runtime-path"
+      CETUS: "${CETUS:?Set CETUS to the Cetus binary path inside the server container}"
+      CETUS_PROFILES_FILE: "/app/cetus-profiles.json"
     ports:
       - "8000:8000"
     volumes:
       - server_runtime:/app/runtime-path
+      - server_files:/app/files
+      - server_db:/app/db
+      # Cetus's generated launcher embeds this checkout path in its classpath.
+      - "${CETUS_HOST_DIR:?Set CETUS_HOST_DIR to the checkout path on the host}:${CETUS_CONTAINER_DIR:?Set CETUS_CONTAINER_DIR to the path embedded in bin/cetus}:ro"
+      - "${CETUS_PROFILES_HOST_FILE:?Set CETUS_PROFILES_HOST_FILE before running Docker Compose}:/app/cetus-profiles.json:ro"
     restart: unless-stopped
     depends_on:
       ollama:
@@ -110,4 +117,6 @@ services:
 volumes:
   ollama_data:
   server_runtime:
+  server_files:
+  server_db:
   client_runtime:
