@@ -15,8 +15,6 @@
       `A[B[i]]` to help identify additional parallelization opportunities.
     - **Cetus optimization profiles:** Exposes parallelization, reuse analysis,
       tiling, and loop interchange through SMART's MCP and REST interfaces.
-    - **External Cetus configuration:** Uses a user-configured Cetus binary and
-      `config/profiles.json` rather than a hard-coded installation path.
   owner: Miguel Rosas, Miguel Torres
   primaryThrust: CI4AI
   targetIcicleRelease: 2026-10

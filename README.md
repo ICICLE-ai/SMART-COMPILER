@@ -4,7 +4,7 @@ This project introduces an agentic approach for high-level and multi-purpose com
 
 This release connects that workflow to [Cetus](https://github.com/PAROT-Udel/The-Cetus-Project) optimization capabilities for C programs: parallel-aware tiling (PAW Tiling) to improve cache locality while preserving data dependencies and supporting parallel execution; improved loop interchange that checks legality and uses reuse analysis to choose loop order, including for symbolic loop bounds; and subscripted-subscript analysis for supported indirect accesses such as A[B[i]], helping identify additional parallelization opportunities.
 
-![Version](https://img.shields.io/badge/Version-2.0-green)
+![Version](https://img.shields.io/badge/Version-3.0-green)
 
 ![Thrust-CAI4AI](https://img.shields.io/badge/Thrust-CI4AI-red)
 
