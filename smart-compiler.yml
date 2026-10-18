@@ -1,19 +1,26 @@
-- id: SmartCompiler:2.0
+- id: SmartCompiler:3.0
   name: Smart Compiler.
   status: AlphaRelease.
   website: none
   description: >
-    This Smart Compiler uses AI models and traditional compiler techniques 
-    to enhance the performance scalability of C programs and Python programs 
-    by profiling and identifying optimization approaches.  
+    This Smart Compiler combines AI-assisted profiling with Cetus-backed
+    optimization for C programs and performance profiling for C and Python.
 
-    **New in this release (MCP Features):**
-    - **MCP Server**: Added a server component exposing profiling tools for C and Python code, enabling detailed performance insights.  
-    - **MCP Client**: Included a basic client for testing and interacting with the MCP server, facilitating early adoption and feedback.  
+    **New in release 3.0:**
+    - **PAW tiling:** Adds parallel-aware, cache-oriented tiling through NT,
+      LRW/FindB, and fixed-size tile profiles.
+    - **Loop interchange:** Adds legality-checked loop reordering guided by
+      reuse analysis, including support for symbolic loop bounds.
+    - **Subscripted-subscript analysis:** Supports indirect accesses such as
+      `A[B[i]]` to help identify additional parallelization opportunities.
+    - **Cetus optimization profiles:** Exposes parallelization, reuse analysis,
+      tiling, and loop interchange through SMART's MCP and REST interfaces.
+    - **External Cetus configuration:** Uses a user-configured Cetus binary and
+      `config/profiles.json` rather than a hard-coded installation path.
   owner: Miguel Rosas, Miguel Torres
   primaryThrust: CI4AI
-  targetIcicleRelease: 2025-08
-  componentVersion: 2.0
+  targetIcicleRelease: 2026-10
+  componentVersion: 3.0
   licenseUrl: https://opensource.org/license/bsd-3-clause
   publicAccess: true
   restrictedToRole: false
