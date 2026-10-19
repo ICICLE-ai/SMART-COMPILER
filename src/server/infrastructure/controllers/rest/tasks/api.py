@@ -84,6 +84,10 @@ async def create_compiler_task(
         ),
     ],
     file: UploadFile = File(...),
+    optimization_profile: str = Form(
+        default="parallel",
+        description="Cetus optimization profile (for example: parallel, paw_tiling_nt, paw_tiling_lrw, paw_tiling_fixed32, reuse_analysis).",
+    ),
     runtime_options: Annotated[
         str | None,
         Form(
@@ -156,6 +160,8 @@ async def create_compiler_task(
         raise HTTPException(status_code=400, detail="No file provided")
     
     check_file_extension_and_language(file.filename, language)
+    if task_type == TaskType.OPTIMIZE and language != ProgrammingLanguage.C:
+        raise HTTPException(status_code=400, detail="Cetus optimization is only supported for C source files")
 
     file_content = await file.read()
     file_content_str = file_content.decode("utf-8")
@@ -169,6 +175,7 @@ async def create_compiler_task(
             language=ProgrammingLanguage(language),
             path=file_path,
             runtime_options=runtime_options_obj,
+            optimization_profile=optimization_profile if task_type == TaskType.OPTIMIZE else None,
         )
         task = await ScheduleCompilerTask(
             task_repository=get_task_repository(),

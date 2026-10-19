@@ -41,6 +41,7 @@ class InMemoryTaskRepository(TaskRepository):
             updated_at=None,
             status=TaskStatus.PENDING,
             result=None,
+            optimization_profile=task_request.optimization_profile,
         )
         self.tasks[task_id] = task
         return task

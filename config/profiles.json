@@ -1,0 +1,98 @@
+{
+  "parallel": {
+    "description": "OpenMP parallelization. Not stock Cetus defaults: -alias=3 (default 1) and -profitable-omp=0 (default 1).",
+    "flags": [
+      "-alias=3",
+      "-verbosity=0",
+      "-profitable-omp=0",
+      "-ddt=2",
+      "-privatize=2",
+      "-reduction=2",
+      "-parallelize-loops=1",
+      "-ompGen=1"
+    ]
+  },
+  "paw_tiling_nt": {
+    "description": "Parallel-aware tiling with NT tile sizes (shared L3, 4 cores).",
+    "flags": [
+      "-alias=3",
+      "-verbosity=0",
+      "-profitable-omp=0",
+      "-tile-profitability=1",
+      "-cores=4",
+      "-cacheSize=25600",
+      "-cacheLine=64",
+      "-selection=NT",
+      "-tilingLevel=0",
+      "-ddt=2",
+      "-privatize=2",
+      "-reduction=2",
+      "-parallelize-loops=1",
+      "-ompGen=1",
+      "-paw_tiling=1"
+    ]
+  },
+  "paw_tiling_lrw": {
+    "description": "Parallel-aware tiling with LRW (FindB) tile sizes.",
+    "flags": [
+      "-alias=3",
+      "-verbosity=0",
+      "-profitable-omp=0",
+      "-tile-profitability=1",
+      "-cores=4",
+      "-cacheSize=25600",
+      "-cacheLine=64",
+      "-selection=LRW",
+      "-tilingLevel=0",
+      "-ddt=2",
+      "-privatize=2",
+      "-reduction=2",
+      "-parallelize-loops=1",
+      "-ompGen=1",
+      "-paw_tiling=1"
+    ]
+  },
+  "paw_tiling_fixed32": {
+    "description": "Parallel-aware tiling with a fixed tile size of 32. -tileSizes forces the FIXED selector.",
+    "flags": [
+      "-alias=3",
+      "-verbosity=0",
+      "-profitable-omp=0",
+      "-tile-profitability=1",
+      "-cores=4",
+      "-cacheSize=25600",
+      "-cacheLine=64",
+      "-selection=FIXED",
+      "-tileSizes=32",
+      "-tilingLevel=0",
+      "-ddt=2",
+      "-privatize=2",
+      "-reduction=2",
+      "-parallelize-loops=1",
+      "-ompGen=1",
+      "-paw_tiling=1"
+    ]
+  },
+  "reuse_analysis": {
+    "description": "OpenMP parallelization with explicit reuse-vector analysis",
+    "flags": [
+      "-alias=3",
+      "-verbosity=0",
+      "-profitable-omp=0",
+      "-ddt=2",
+      "-privatize=2",
+      "-reduction=2",
+      "-reuse-vector-analysis=1",
+      "-parallelize-loops=1",
+      "-ompGen=1"
+    ]
+  },
+  "loop_interchange": {
+    "description": "Cetus loop interchange without OpenMP loop parallelization or generation.",
+    "flags": [
+      "-loop_interchange",
+      "-parallelize-loops=0",
+      "-ompGen=0"
+    ]
+  }
+}

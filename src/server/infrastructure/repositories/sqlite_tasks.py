@@ -26,10 +26,14 @@ class SQLiteTaskRepository(TaskRepository):
                 status TEXT,
                 runtime_options JSON NULL,
                 result JSON NULL,
-                internal_job_id TEXT NULL
+                internal_job_id TEXT NULL,
+                optimization_profile TEXT NULL
             );
             """
         )
+        columns = {row[1] for row in self.conn.execute("PRAGMA table_info(tasks)")}
+        if "optimization_profile" not in columns:
+            self.conn.execute("ALTER TABLE tasks ADD COLUMN optimization_profile TEXT NULL")
         self.conn.commit()
 
     async def save_task(self, task_request: CompilerTaskRequest) -> CompilerTask:
@@ -44,9 +48,10 @@ class SQLiteTaskRepository(TaskRepository):
             updated_at=None,
             status=TaskStatus.PENDING,
             result=None,
+            optimization_profile=task_request.optimization_profile,
         )
         self.conn.execute(
-            "INSERT INTO tasks (id, task_type, language, path, created_at, updated_at, status, runtime_options, result, internal_job_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO tasks (id, task_type, language, path, created_at, updated_at, status, runtime_options, result, internal_job_id, optimization_profile) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 task.task_id.value,
                 task.task_type.value,
@@ -58,6 +63,7 @@ class SQLiteTaskRepository(TaskRepository):
                 json.dumps(task.runtime_options, cls=CompilerTaskEncoder) if task.runtime_options else None,
                 None,
                 task.internal_job_id,
+                task.optimization_profile,
             ),
         )
         self.conn.commit()
@@ -66,13 +72,14 @@ class SQLiteTaskRepository(TaskRepository):
     async def update_task(self, task: CompilerTask) -> CompilerTask:
         task.updated_at = datetime.now()
         self.conn.execute(
-            "UPDATE tasks SET status = ?, updated_at = ?, result = ?, runtime_options = ?, internal_job_id = ? WHERE id = ?",
+            "UPDATE tasks SET status = ?, updated_at = ?, result = ?, runtime_options = ?, internal_job_id = ?, optimization_profile = ? WHERE id = ?",
             (
                 task.status.value,
                 task.updated_at,
                 json.dumps(task.result, cls=CompilerTaskEncoder) if task.result else None,
                 json.dumps(task.runtime_options, cls=CompilerTaskEncoder) if task.runtime_options else None,
                 task.internal_job_id,
+                task.optimization_profile,
                 task.task_id.value,
             ),
         )
@@ -80,7 +87,7 @@ class SQLiteTaskRepository(TaskRepository):
         return task
 
     async def get_task(self, task_id: TaskId) -> CompilerTask | None:
-        cursor = self.conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id.value,))
+        cursor = self.conn.execute("SELECT id, task_type, language, path, created_at, updated_at, status, runtime_options, result, internal_job_id, optimization_profile FROM tasks WHERE id = ?", (task_id.value,))
         row = cursor.fetchone()
         if row is None:
             return None
@@ -100,5 +107,6 @@ class SQLiteTaskRepository(TaskRepository):
             runtime_options=ProgramRuntimeOptions.from_json(runtime_options) if runtime_options else None,
             result=result,
             internal_job_id=internal_job_id,
+            optimization_profile=row[10],
         )
     

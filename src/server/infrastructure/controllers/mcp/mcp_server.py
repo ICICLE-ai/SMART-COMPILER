@@ -10,6 +10,7 @@ from server.config import LOG_LEVEL, PORT, HOST
 from shared.logging import get_logger
 from server.infrastructure.controllers.mcp.profiler.api import register_api as register_profiler_api
 from server.infrastructure.controllers.mcp.files.api import register_api as register_files_api
+from server.infrastructure.controllers.mcp.optimizer.api import register_api as register_optimizer_api
 
 logger = get_logger()
 
@@ -38,6 +39,7 @@ server  = FastMCP("SmartCompiler-MCP", settings=mcp_settings)
 
 register_profiler_api(server)
 register_files_api(server)
+register_optimizer_api(server)
 
 
 def create_sse_server(mcp: FastMCP):
