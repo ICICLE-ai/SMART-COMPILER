@@ -1,7 +1,6 @@
-- id: SmartCompiler:3.0
-  name: Smart Compiler.
-  status: AlphaRelease.
-  website: none
+- id: SmartCompiler:3.0.0
+  name: Smart Compiler
+  status: AlphaRelease
   description: >
     This Smart Compiler combines AI-assisted profiling with Cetus-backed
     optimization for C programs and performance profiling for C and Python.
@@ -16,9 +15,11 @@
     - **Cetus optimization profiles:** Exposes parallelization, reuse analysis,
       tiling, and loop interchange through SMART's MCP and REST interfaces.
   owner: Miguel Rosas, Miguel Torres
-  primaryThrust: CI4AI
-  targetIcicleRelease: 2026-10
+  primaryThrust: core/CI4AI
+  targetIcicleRelease: "2026-10"
   componentVersion: 3.0
-  licenseUrl: https://opensource.org/license/bsd-3-clause
+  licenseUrl: https://github.com/ICICLE-ai/SMART-COMPILER?tab=BSD-3-Clause-1-ov-file
   publicAccess: true
-  restrictedToRole: false
+  sourceCodeUrl: https://github.com/ICICLE-ai/SMART-COMPILER
+  developerDocumentationAvailable: true
+  trainingTutorialsAvailable: https://icicle-ai.github.io/training-catalog/docs/category/smart-compiler-2
