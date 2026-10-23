@@ -6,7 +6,7 @@ This release connects that workflow to [Cetus](https://github.com/PAROT-Udel/The
 
 ![Version](https://img.shields.io/badge/Version-3.0-green)
 
-![Thrust-CAI4AI](https://img.shields.io/badge/Thrust-CI4AI-red)
+**Tags:** CI4AI
 
 ## License
 
