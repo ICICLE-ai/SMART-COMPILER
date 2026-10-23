@@ -1,23 +1,23 @@
+import os
+from urllib.parse import urlsplit
+
 from client.ollama.client import OllamaMCPClient
+from client.openai.client import OpenAIResponsesMCPClient
 
 
 class ClientFactory:
-    def __init__(self):
-        pass
-
-    def create_client(self, client_type: str):
-        """
-        Create a client based on the specified type.
-        
-        Args:
-            client_type: The type of client to create ('ollama' or 'openai')
-        """
-        
-        if(client_type == "ollama"):
+    def create_client(self, client_type: str = "llm"):
+        """Select local Ollama or the OpenAI Responses API from LLM_HOST."""
+        host = os.getenv("LLM_HOST") or os.getenv(
+            "OLLAMA_HOST", "http://localhost:11434"
+        )
+        parsed = urlsplit(host)
+        if (
+            parsed.hostname in {"localhost", "127.0.0.1", "::1"}
+            and parsed.port == 11434
+            and not parsed.path.rstrip("/").endswith("/v1")
+        ):
             return OllamaMCPClient()
-        elif(client_type == "openai"):
-            raise NotImplementedError("OpenAI client not implemented")
-        else:
-            return OllamaMCPClient()
-        
-        pass
+        if client_type in {"llm", "ollama", "openai"}:
+            return OpenAIResponsesMCPClient()
+        raise ValueError(f"Unsupported client type: {client_type}")

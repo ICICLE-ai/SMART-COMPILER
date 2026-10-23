@@ -92,42 +92,45 @@ Once Ollama is installed deploy the Ollama server (if it was not deployed by the
 
 
 
-#### Setting up Environment variables
-Set up the environment variables in a ```.env``` file.
-An example of how this file looks like.
+#### Setting up Environment Variables
+
+Run the client and server from the SMART-COMPILER project root. Both entry points load a root-level `.env` file automatically with `python-dotenv`, so you do not need to source it manually.
+
+On first setup, copy the checked-in client template to a private root-level `.env` file:
+
+```bash
+cp envs/.client.example.env .env
 ```
-# For client, see envs/.client.example.env
-# .env
+
+If `.env` already exists, edit it instead of overwriting it. Set `LLM_MODEL` and `LLM_HOST` for the provider you want the client to use.
+
+**Local Ollama** — no API key is needed:
+
+```dotenv
+LLM_MODEL=llama3.1-smart-compiler:latest
+LLM_HOST=http://localhost:11434
+```
+
+**OpenAI API** — use a model that supports tool calling:
+
+```dotenv
+LLM_MODEL=gpt-6-astra
+LLM_HOST=https://api.openai.com/v1
+# Replace with your key in this private .env file; never commit a real key.
+OPENAI_API_KEY=your-openai-api-key
+```
+
+You can also provide `OPENAI_API_KEY` through your shell. The root `.env` is ignored by Git; keep real keys out of tracked example files. The OpenAI client uses the Responses API for `api.openai.com`.
+
+These client settings apply with either provider:
+
+```dotenv
 LOG_LEVEL=INFO
-OLLAMA_MODEL=llama3.1-smart-compiler:latest
-OLLAMA_HOST=http://localhost:11434
 MCP_SERVER_URL=http://localhost:8000/sse
-ALLOWED_PATHS="/mnt/d/workspace/python/smart-compiler/examples"
+ALLOWED_PATHS="/path/to/SMART-COMPILER/examples"
 ```
-In order to activate these client environment varibles , we must type :
 
-`set -o allexport; source .env; set +o allexport`
-
-
-
-```
-For Server, see envs/.server.example.env
-LOG_LEVEL=INFO
-OLLAMA_MODEL=llama3.1:latest
-OLLAMA_HOST=http://localhost:11434
-MCP_SERVER_HOST=0.0.0.0
-MCP_SERVER_PORT=8000
-MCP_SERVER_TRANSPORT=sse
-ENABLE_REST_API=true
-ALLOWED_PATHS="/mnt/d/workspace/python/smart-compiler/examples"
-
-```
-In order to activate these server environment varibles , we must type :
-
-`set -o allexport; source .env; set +o allexport`
-
-we can aslo do it with: export $(cat .env | xargs) on Linux to load the env variables or just source in Windows
-
+Replace `ALLOWED_PATHS` with the source directories the client may access. Server-side profiling still uses the Ollama settings `OLLAMA_MODEL` and `OLLAMA_HOST`; see `envs/.server.example.env` for the Cetus and server configuration.
 
 ## Option 1:  Running the project without Docker
 For running the project, once all dependencies and configurations are set, run the following command:
@@ -488,22 +491,16 @@ Access profiling results via the API:
 
 ### Client Setup
 
-Check `envs` folder to see examples for environment configuration. 
+Configure the client in the root `.env` as described in [Setting up Environment Variables](#setting-up-environment-variables). Start the MCP server first, then run the client from the SMART-COMPILER project root:
 
 ```bash
-LOG_LEVEL=INFO
-OLLAMA_MODEL=llama3.1-smart-compiler:latest #A LLM that support tools is required
-OLLAMA_HOST=http://localhost:11434
-MCP_SERVER_URL=http://localhost:8000/sse
-ALLOWED_PATHS="/mnt/d/workspace/python/smart-compiler/examples"
+uv run python src/run_client.py
 ```
 
-Then, you can run the following command to initialize the Smart Compiler. 
-```bash
-python run src/run_client.py
-#or
-uv run src/run_client.py
-```
+The client will ask what task to perform. For example:
+
+- `Please optimize the C file at /path/to/SMART-COMPILER/examples/vector.c using the parallel profile.`
+- `Please profile the C file at /path/to/SMART-COMPILER/examples/vector.c.`
 
 Note: The client implemented in the SmartCompiler project is a PoC of a client. The “client” inside the SmartCompiler project is not a full production-ready client, but rather a minimal or experimental implementation. Its purpose is to demonstrate feasibility—showing that a client can connect, interact, and work with the SmartCompiler system. For more advanced uses, we recommend trying it out with platforms focused on MCP tools such as Cursor, Claude Desktop or Github Copilot as explain in previous sections.
 
