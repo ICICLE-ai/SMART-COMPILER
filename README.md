@@ -19,6 +19,8 @@ SMART Compiler uses the [BSD 3-Clause license](LICENSE). Cetus retains its upstr
 - [uv installation and dependency management](https://docs.astral.sh/uv/)
 - [Ollama documentation](https://docs.ollama.com/) for the optional local model service
 - [Model Context Protocol documentation](https://modelcontextprotocol.io/)
+- [IMT integration diagram 1](https://drive.google.com/file/d/1S5gRxw_vizR1XnmbiZnAH1yZnkB8Ep0_/view?usp=drive_link)
+- [IMT integration diagram 2](https://drive.google.com/file/d/1tgCcINlzBUe6A1PCNX6R_ftAnb9WidcA/view?usp=sharing)
 - [Diátaxis](https://diataxis.fr/), the framework used to separate tutorials, task guides, explanation, and technical reference
 
 ## Acknowledgements
@@ -196,6 +198,7 @@ On macOS, native Cetus optimization can fail while preprocessing Apple SDK syste
 | Build images, mount source files, or manage persistent results | [Run with Docker](docs/how-to/run-with-docker.md) |
 | Install and run without Docker | [Run natively](docs/how-to/run-native.md) |
 | Use the CLI, Ollama, another model host, or an external MCP client | [Connect a client](docs/how-to/connect-a-client.md) |
+| Submit a profiling task, check its status, and retrieve its report in Postman | [Profile with Postman](docs/how-to/profile-with-postman.md) |
 | Add a custom optimization profile | [Customize profiles](docs/reference/optimization-profiles.md#add-a-custom-profile) |
 | Diagnose Java, networking, path, profile, or parsing errors | [Troubleshooting](docs/troubleshooting.md) |
 
@@ -218,6 +221,12 @@ For REST requests, `curl -F 'file=@main.c'` reads `main.c` where curl runs and u
 # Explanation
 
 The SMART server exposes compiler tools and owns the files those tools read. Cetus runs on that server and transforms C source according to its selected profile. A model host and conversational client are optional: direct REST optimization and classical profiling can call the tools without a model.
+
+## Architecture diagram
+
+![SMART Compiler architecture showing the conversational client, model service, MCP and REST APIs, compiler tools, and an external system](diagrams/architecture.png)
+
+The diagram illustrates a local Ollama deployment. Other compatible model hosts can fill the model-service role; Cetus and the profilers run through the SMART server's tools. The [IMT integration diagrams](#references) show the connection with ICICLE Middleware and Tools.
 
 The Docker image builds Cetus and supplies its Java 21 runtime together, keeping the compiler's embedded paths and Java compatibility consistent. A native installation supplies that compiler checkout and toolchain separately.
 

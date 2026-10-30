@@ -123,6 +123,58 @@ ENABLE_REST_API=true
 
 The external client's model configuration belongs to that client. SMART's bundled CLI does not need to run alongside it.
 
+The screenshots below show earlier editor sessions. Interface labels and model names may differ in your installation; use your running SMART server's address. Paths and timings shown in a profiling report belong to that example session.
+
+### VS Code / GitHub Copilot example
+
+1. Open the Command Palette and choose **MCP: Add Server…**.
+
+   ![VS Code Command Palette showing MCP: Add Server](../images/addServer.png)
+
+2. Choose the HTTP connection option and enter SMART's SSE endpoint, such as `http://127.0.0.1:8000/sse` for an editor on the same machine as the server.
+
+   ![VS Code MCP transport menu showing the HTTP or Server-Sent Events option](../images/httpMCP.png)
+
+3. Open Copilot Chat and select **Agent** mode so the client can call SMART's tools.
+
+   ![Copilot Chat menu with Agent mode selected](../images/Agent.png)
+
+4. Type a request into Copilot Chat, for example:
+
+   ```text
+   Create a small Python matrix multiplication example, profile it using SMART's profile_code_snippet tool, and explain the profiling report.
+   ```
+
+   ![Copilot response after invoking SMART's profiling tool for a Python matrix multiplication example](../images/usecaseCopilot.png)
+
+### Cursor profiling example
+
+Configure Cursor's MCP connection with the running SMART server's SSE URL. This example follows a Python matrix multiplication snippet from generation through profiling; enter requests in Cursor's chat.
+
+1. Check that Cursor lists the SMART MCP connection and its enabled tools.
+
+   ![Cursor showing the enabled smart_compiler MCP connection](../images/use_case_1_1.png)
+
+2. Ask Cursor to generate a small Python matrix multiplication example.
+
+   ![Cursor generating a small Python matrix multiplication snippet](../images/use_case_1_2.png)
+
+3. Ask it to profile the snippet using SMART's `profile_code_snippet` tool and inspect the returned report.
+
+   ![Cursor invoking profile_code_snippet and summarizing the small example's profiling output](../images/use_case_1_3.png)
+
+4. Expand the example to larger matrices when you want to investigate how the workload changes.
+
+   ![Cursor expanding the example to multiply two 1000 by 1000 matrices](../images/use_case_1_4.png)
+
+5. Profile the larger example with the same tool.
+
+   ![Cursor invoking profile_code_snippet for the larger matrix example and displaying its output](../images/use_case_1_5.png)
+
+6. Review the client's interpretation of the profiling report. Suggestions and comparisons with other implementations are model commentary, rather than additional benchmark measurements.
+
+   ![Cursor interpreting the profiling results and suggesting performance improvements](../images/use_case_1_6.png)
+
 ## Clients that launch a stdio MCP server
 
 A stdio client launches its own SMART process. Set `MCP_SERVER_TRANSPORT=stdio` and `ENABLE_REST_API=false`; do not give that client an SSE URL for this process.

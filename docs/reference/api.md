@@ -50,6 +50,8 @@ For Python, use `language=python` and upload a `.py` file. Profile tasks use the
 
 Optional `runtime_options` is a JSON multipart field for execution/compilation options. See the current schema at `http://127.0.0.1:8000/docs` before configuring arguments, working directories, or environment values.
 
+For the same submit, poll, and download workflow with screenshots, follow [Profile with Postman](../how-to/profile-with-postman.md).
+
 ## MCP tools
 
 | Tool | Input | Result |
