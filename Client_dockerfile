@@ -1,29 +1,21 @@
-# Base image with Python
-FROM python:3.12-alpine
+FROM python:3.12-slim-bookworm
 
-# Set working directory
 WORKDIR /app
 
-COPY . .
-
-#Remove client code
-RUN rm -rf src/server
-RUN rm -rf src/run_server.py
-
-# Install from requirements.txt
-# Install dependencies
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    LOG_LEVEL=INFO \
+    MCP_SERVER_URL=http://server:8000/sse \
+    LLM_HOST=http://ollama:11434/v1 \
+    LLM_MODEL=llama3.1-smart-compiler:latest \
+    ALLOWED_PATHS=file:///app/Testing_Examples
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-RUN rm -rf requirements.txt
 
+COPY src/client ./src/client
+COPY src/shared ./src/shared
+COPY src/run_client.py ./src/run_client.py
+COPY Testing_Examples ./Testing_Examples
 
-# Set environment variables for client to connect to Ollama and MCP server
-ENV OLLAMA_MODEL=llama3.1-smart-compiler:latest
-ENV OLLAMA_HOST=http://localhost:11434
-ENV LOG_LEVEL=INFO
-ENV MCP_SERVER_URL=http://localhost:8000/sse
-ENV ALLOWED_PATHS='/app/runtime-path'
-
-# Start the client
 CMD ["python", "src/run_client.py"]

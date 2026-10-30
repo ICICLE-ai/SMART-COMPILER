@@ -42,7 +42,10 @@ class OllamaMCPClient(AbstractMCPClient):
         # Initialize session and client objects
         super().__init__()
 
-        self._internal_ollama_client = Client(host=os.getenv("OLLAMA_HOST"))
+        host = os.getenv("LLM_HOST") or os.getenv(
+            "OLLAMA_HOST", "http://localhost:11434"
+        )
+        self._internal_ollama_client = Client(host=host)
         self.tools = []
 
 
@@ -52,32 +55,32 @@ class OllamaMCPClient(AbstractMCPClient):
         Args:
             server_script_path: Path to the server script (.py or .js)
         """
-        
+
 
         server_url = os.getenv("MCP_SERVER_URL", "http://localhost:8000")
         logger.debug(f"connecting to server at {server_url}")
-  
+
         self.stdio, self.write = await self.exit_stack.enter_async_context(
             sse_client(server_url)
         )
-        
+
         self.list_roots_callback=OllamaListRootsFnT()
 
         self.session = await self.exit_stack.enter_async_context(ClientSession(self.stdio, self.write, list_roots_callback=self.list_roots_callback))
-        
+
         if self.session is None:
             raise ValueError("Failed to create session")
-   
+
         logger.debug(f"client session: {self.session}")
-        
-        
+
+
         await self.session.initialize()
-        
+
         logger.debug(f"client session initialized")
 
         # List available tools
         response = await self.session.list_tools()
-        
+
         logger.debug(f"\nConnected to server with tools: {[tool['function']['name'] for tool in self.tools]}")
         logger.debug("Tools' details")
         for tool in response.tools:
@@ -113,7 +116,7 @@ Do not substitute GCC or LLVM shell commands for Cetus. Do not invent tool resul
         if self.session is None:
             raise ValueError("Session not initialized")
 
-        model = os.getenv("OLLAMA_MODEL", "llama3.1:latest")
+        model = os.getenv("LLM_MODEL") or os.getenv("OLLAMA_MODEL", "llama3.1:latest")
         final_text = []
         last_file_read = None
 
@@ -224,10 +227,10 @@ Do not substitute GCC or LLVM shell commands for Cetus. Do not invent tool resul
 
         while True:
             try:
-                               
+
                 # folderProject = input("\nPlease provide the folder of your project: ").strip()
                 # print("this is the folder project", folderProject)
-                
+
                 # TODO: Add the folder tree as a tool
                 # folderTree = FolderTree(folderProject)
                 # folderFile = input("\nPlease provide the file you want to analyze: ").strip()
@@ -236,16 +239,16 @@ Do not substitute GCC or LLVM shell commands for Cetus. Do not invent tool resul
                 #     print(f"File '{folderFile}' not found in the project.")
                 #     continue
                 # print(f"File '{folderFile}' found in the project.")
-                
+
                 # instruction = input("\nWhat do you want to do with the file? (Profile or Optimize): ").strip()
-                
+
                 #query = input("Escribe algo...\n")
                 # query = f"Please {instruction} the file {foundFile['path']}"
                 # query = f"Please {instruction}"
                 # print(f"Query: {query}")
-                
-                print("Start chatting... Type quit to exit\n")  
-                
+
+                print("Start chatting... Type quit to exit\n")
+
                 query = input("You: ")
 
                 if query.lower() == 'quit':

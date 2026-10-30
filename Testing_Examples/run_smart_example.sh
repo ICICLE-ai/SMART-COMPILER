@@ -34,7 +34,11 @@ fi
 
 if ! curl --fail --silent --show-error "$smart_url/health" >/dev/null 2>&1; then
   echo "SMART API is not reachable at $smart_url." >&2
-  echo "Start the SMART server on this DARWIN host first; see README.md." >&2
+  echo "Check SMART_URL and start or verify the SMART server." >&2
+  echo "Guides (from the SMART-COMPILER project root):" >&2
+  echo "  Docker setup: docs/how-to/run-with-docker.md" >&2
+  echo "  Native setup: docs/how-to/run-native.md" >&2
+  echo "  Troubleshooting: docs/troubleshooting.md" >&2
   exit 1
 fi
 

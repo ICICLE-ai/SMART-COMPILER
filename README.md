@@ -1,510 +1,256 @@
-# Smart Compiler Infrastructure
+# SMART Compiler 3.0
 
-This project introduces an agentic approach for high-level and multi-purpose compilers.
+SMART Compiler lets you request **C optimization** and **C/Python profiling** in natural language. Its conversational client connects a tool-capable language model to SMART's Model Context Protocol (MCP) tools, which run Cetus and the profilers. You can also call the server directly through its REST API for automation and testing.
 
-This release connects that workflow to [Cetus](https://github.com/PAROT-Udel/The-Cetus-Project) optimization capabilities for C programs: parallel-aware tiling (PAW Tiling) to improve cache locality while preserving data dependencies and supporting parallel execution; improved loop interchange that checks legality and uses reuse analysis to choose loop order, including for symbolic loop bounds; and subscripted-subscript analysis for supported indirect accesses such as A[B[i]], helping identify additional parallelization opportunities.
+This release adds Cetus profiles for OpenMP parallelization, parallel-aware tiling, loop interchange, and reuse-vector analysis. The Docker server image includes a pinned Cetus `release/3.0` build and **Java 21**. Native installations build Cetus separately.
 
-![Version](https://img.shields.io/badge/Version-3.0-green)
+**Tags:** Software, CI4AI
 
-**Tags:** CI4AI
+### License
 
-## License
+[![License: BSD 3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-blue.svg)](LICENSE)
 
-[![License](https://img.shields.io/badge/License-BSD_3-3.svg)](https://opensource.org/license/BSD-3-clause)
+SMART Compiler uses the [BSD 3-Clause license](LICENSE). Cetus retains its upstream licensing and notices in the bundled checkout.
 
 ## References
 
-- To deploy a LLM using ollama first we need to install Ollama by following 
-its [Official Documentation](https://ollama.com)
+- [Cetus compiler source and documentation](https://github.com/PAROT-Udel/The-Cetus-Project)
+- [Docker Compose documentation](https://docs.docker.com/compose/)
+- [uv installation and dependency management](https://docs.astral.sh/uv/)
+- [Ollama documentation](https://docs.ollama.com/) for the optional local model service
+- [Model Context Protocol documentation](https://modelcontextprotocol.io/)
+- [IMT integration diagram 1](https://drive.google.com/file/d/1S5gRxw_vizR1XnmbiZnAH1yZnkB8Ep0_/view?usp=drive_link)
+- [IMT integration diagram 2](https://drive.google.com/file/d/1tgCcINlzBUe6A1PCNX6R_ftAnb9WidcA/view?usp=sharing)
+- [Diátaxis](https://diataxis.fr/), the framework used to separate tutorials, task guides, explanation, and technical reference
 
 ## Acknowledgements
 
-- National Science Foundation (NSF) funded AI institute for Intelligent Cyberinfrastructure with Computational Learning in the Environment (ICICLE) (OAC 2112606)
+*National Science Foundation (NSF) funded AI institute for Intelligent Cyberinfrastructure with Computational Learning in the Environment (ICICLE) (OAC 2112606)*
+
+## Issue reporting
+
+Report bugs, setup failures, and documentation problems through [SMART Compiler GitHub Issues](https://github.com/ICICLE-ai/SMART-COMPILER/issues). Include:
+
+- The SMART revision, Docker or native setup, operating system, and architecture.
+- The command or prompt, optimization profile, and a minimal input that reproduces the issue.
+- Relevant error output and, for compiler failures, the Java and Cetus versions. Redact API keys and tokens from logs.
+
+Check [troubleshooting](docs/troubleshooting.md) for known Java, networking, source-path, and parser errors before reporting a new issue.
+
+---
+
+# Tutorials
+
+## Optimize code with a natural-language request
+
+**Goal:** type a request into SMART's conversational client and receive optimized C code.
+
+The example below uses Docker and a local Ollama model. **Prerequisites:** Docker Engine/Desktop with Compose and a SMART-COMPILER checkout. Docker supplies the server, Cetus, Java 21, the model service, and the client; this local-model route needs no API key.
+
+If you already have a native SMART server or another model host, use the [native client instructions below](#use-a-native-client-or-another-model-host) or the [client connection guide](docs/how-to/connect-a-client.md).
+
+For a better natural-language experience, we recommend a model with strong instruction-following and tool-calling capabilities. More capable models can help SMART interpret your requests and use the optimization and profiling tools more reliably.
+
+### 1. Start SMART, the model service, and the client
+
+Run this from your SMART-COMPILER checkout:
+
+```bash
+LLM_HOST=http://ollama:11434/v1 \
+LLM_MODEL=llama3.1-smart-compiler:latest \
+OPENAI_API_KEY= \
+docker compose --profile llm up -d --build
+
+docker compose --profile llm ps -a
+docker compose --profile llm logs --tail=50 ollama_init
+```
+
+The first initialization downloads the base Llama model and creates `llama3.1-smart-compiler`. Wait for the server to become healthy and `ollama_init` to finish successfully before continuing. The explicit model settings above keep this Docker example independent of native-client settings in a host `.env`.
+
+### 2. Open the chat terminal
+
+Attach to the running interactive client:
+
+```bash
+docker compose attach --sig-proxy=false client
+```
+
+Enter natural-language requests in this attached terminal at the client's **`You:`** prompt. The client may already be waiting for input when you attach, so the prompt may have been printed before attachment. If the terminal is blank, type your request and press Enter; subsequent turns will display `You:`.
+
+### 3. Type your optimization request at `You:`
+
+The client prints the `You:` prefix; type the message after it, or start typing if the initial prompt is not visible:
+
+```text
+You: Please optimize the C file at /app/Testing_Examples/01_vector_scale.c using the parallel profile.
+```
+
+The model can read the file through SMART's MCP tools and call the optimization tool. Cetus runs inside the SMART server, and the client displays the returned C code in the conversation. Save that returned text if you want a file; MCP optimization does not create a persistent REST task result.
+
+**Your prompt → language model → MCP tools → Cetus → optimized code in the client.**
+
+The `/app/Testing_Examples` path is inside the Docker server. For your own C files, [mount their directory into the server](docs/how-to/run-with-docker.md#make-host-source-files-available) and use the server-visible path in your prompt. See [available profiles](#available-optimization-profiles) for other optimization choices.
+
+Use **Ctrl-p, Ctrl-q** to detach and return to your shell while leaving the client running, or type `quit` to stop the client. The [client guide](docs/how-to/connect-a-client.md) explains how to restart it. The REST and shell-script examples below are separate automated runs you can perform from your shell.
+
+### Use a native client or another model host
+
+Complete the [native setup](docs/how-to/run-native.md) and [client configuration](docs/how-to/connect-a-client.md) first. Keep the SMART server and chosen model service running. Configure `MCP_SERVER_URL`, `LLM_HOST`, and `LLM_MODEL` for those services; set `OPENAI_API_KEY` only when the provider requires it.
+
+In another terminal, from the SMART-COMPILER project root, start the client:
+
+```bash
+uv run --env-file .env python src/run_client.py
+```
+
+At its **`You:`** prompt, use the file's actual absolute path on the server. Replace the placeholder prefix in this example:
+
+```text
+You: Please optimize the C file at /absolute/path/to/SMART-COMPILER/Testing_Examples/01_vector_scale.c using the parallel profile.
+```
+
+For a Docker client using an existing model service instead of the bundled Ollama service, follow [Docker client with an existing model service](docs/how-to/connect-a-client.md#docker-client-with-an-existing-model-service). Requests are entered at the same `You:` prompt.
+
+## REST API and automated validation
+
+Use this route for direct API access and repeatable checks. These requests and `.sh` scripts call SMART's REST API without an LLM or a natural-language prompt.
+
+Run the following commands at your **shell prompt**, after detaching from or quitting the conversational client. They assume the SMART-COMPILER checkout as the working directory and require curl on the host.
+
+If you completed the Docker conversation above, the server is already running. Otherwise, start the server-only deployment:
+
+```bash
+docker compose up -d --build
+```
+
+Check the REST endpoint and bundled compiler:
+
+```bash
+curl --fail http://127.0.0.1:8000/health
+
+docker compose exec server java -version
+docker compose exec server sh -lc '"$CETUS" -version'
+```
+
+If the health check runs before startup finishes, wait for `docker compose ps` to show a healthy server and retry it.
+
+### Submit a REST request
+
+This uploads a source file from the checkout on the machine running curl:
+
+```bash
+curl --fail-with-body -X POST http://127.0.0.1:8000/tasks \
+  -F 'task_type=optimize' \
+  -F 'language=c' \
+  -F 'optimization_profile=parallel' \
+  -F 'file=@Testing_Examples/01_vector_scale.c'
+```
+
+The response contains a task ID. Follow the [API reference](docs/reference/api.md) to poll its status and download the result.
+
+### Run the automated `.sh` examples
+
+The included runner makes its own REST optimization request, downloads the generated C, compiles the original and transformed programs, and compares their output:
+
+```bash
+docker compose exec -e OMP_NUM_THREADS=2 server sh -lc \
+  'cd /app/Testing_Examples && SMART_URL=http://127.0.0.1:8000 ./run_01_vector_scale.sh'
+```
+
+Success includes:
+
+```text
+PASS 01_vector_scale.c [parallel]: checksum=14999950000
+```
+
+This verifies the example's output equivalence. Inspect the transformed C to confirm the intended transformation; measure timings separately when evaluating performance.
+
+Continue with the [complete REST validation tutorial](docs/tutorials/first-optimization.md), including output retrieval and all eight runs.
+
+---
+
+# How-To Guides
+
+## Choose a setup
+
+| Setup | What you install on the server machine | Start here |
+|---|---|---|
+| Docker, recommended for a first conversation | Docker Engine/Desktop with Compose | [Natural-language tutorial](#optimize-code-with-a-natural-language-request) |
+| Native Linux/WSL | Python 3.11+, uv, a C toolchain, and JDK 21 | [Native setup](docs/how-to/run-native.md) |
+| Existing model host or external MCP client | A reachable model supporting tool calling, plus the running SMART server | [Connect a client](docs/how-to/connect-a-client.md) |
+
+The Docker route needs **no host Java installation, host Cetus checkout, Ollama service, or API key** for direct REST optimization and classical profiling. Docker builds Cetus with JDK 21 and runs it with a Java 21 runtime.
+
+Keep the native Cetus installation path free of spaces, including all parent directories. Its upstream build scripts and generated launcher do not support spaces in that path. SMART's project, input, profile, and result paths can contain spaces when quoted; see the [native build instructions](docs/how-to/run-native.md#3-build-the-pinned-cetus-checkout).
+
+For native Linux/WSL, complete the [native setup](docs/how-to/run-native.md) first. With the server running on port 8000, run shell examples through `uv` so they can find the project's Python interpreter:
+
+```bash
+SMART_URL=http://127.0.0.1:8000 uv run bash Testing_Examples/run_01_vector_scale.sh
+```
+
+On macOS, native Cetus optimization can fail while preprocessing Apple SDK system headers, including inputs that use `<stdio.h>`. A successful `/health` response does not verify this compiler step. Use the [Docker setup](docs/how-to/run-with-docker.md) for affected inputs; see the [native macOS preprocessing limitation](docs/how-to/run-native.md#macos-preprocessing-limitation) for the observed errors.
+
+## Complete a specific task
+
+| Task | Guide |
+|---|---|
+| Build images, mount source files, or manage persistent results | [Run with Docker](docs/how-to/run-with-docker.md) |
+| Install and run without Docker | [Run natively](docs/how-to/run-native.md) |
+| Use the CLI, Ollama, another model host, or an external MCP client | [Connect a client](docs/how-to/connect-a-client.md) |
+| Submit a profiling task, check its status, and retrieve its report in Postman | [Profile with Postman](docs/how-to/profile-with-postman.md) |
+| Add a custom optimization profile | [Customize profiles](docs/reference/optimization-profiles.md#add-a-custom-profile) |
+| Diagnose Java, networking, path, profile, or parsing errors | [Troubleshooting](docs/troubleshooting.md) |
+
+## Where are my source files?
+
+MCP file tools run **inside the SMART server**, so paths in prompts must be visible to that server.
+
+| Source | Path used by the server |
+|---|---|
+| Checked-in examples in the Docker image | `/app/Testing_Examples/01_vector_scale.c` |
+| Your directory mounted into the server | The mount destination you choose, such as `/workspace/input/main.c` |
+| Native server | An absolute path on the machine running the server |
+
+`/examples` is not a built-in alias. Mounting files only into a client container does not make them available to the server.
+
+For REST requests, `curl -F 'file=@main.c'` reads `main.c` where curl runs and uploads its contents; a source mount is unnecessary. See [Docker source mounts](docs/how-to/run-with-docker.md#make-host-source-files-available).
 
 ---
 
 # Explanation
 
-The core vision is to integrate a suite of expert-level compiler tools, enabling seamless, intelligent code analysis, optimization, and profiling for diverse programming languages.
+The SMART server exposes compiler tools and owns the files those tools read. Cetus runs on that server and transforms C source according to its selected profile. A model host and conversational client are optional: direct REST optimization and classical profiling can call the tools without a model.
 
-## Smart Compiler Architectural Diagram
+## Architecture diagram
 
-<img src="diagrams/architecture.png" alt="Components Diagram" style="max-width: 100%; height: auto;" />
+![SMART Compiler architecture showing the conversational client, model service, MCP and REST APIs, compiler tools, and an external system](diagrams/architecture.png)
 
-## IMT Integration
+The diagram illustrates a local Ollama deployment. Other compatible model hosts can fill the model-service role; Cetus and the profilers run through the SMART server's tools. The [IMT integration diagrams](#references) show the connection with ICICLE Middleware and Tools.
 
-Details about the Smart Compiler as an Integration with the IMT (ICICLE Middleware and Tools) project can be found on the following diagramas:
-### **Diagrams**:  
-- [Diagram 1](https://drive.google.com/file/d/1S5gRxw_vizR1XnmbiZnAH1yZnkB8Ep0_/view?usp=drive_link)  
-- [Diagram 2](https://drive.google.com/file/d/1tgCcINlzBUe6A1PCNX6R_ftAnb9WidcA/view?usp=sharing)
+The Docker image builds Cetus and supplies its Java 21 runtime together, keeping the compiler's embedded paths and Java compatibility consistent. A native installation supplies that compiler checkout and toolchain separately.
 
+The bundled CLI and external MCP clients are alternative ways to connect to the server; an editor does not require the bundled CLI to run alongside it. See the [architecture explanation](docs/explanation/architecture.md) for component roles, request flow, input/header limitations, and the difference between correctness checks and performance measurement.
 
 ---
 
-
-# How-To Guides
-
-## Install the project
-For dependency management and installation, this project uses ```uv```.
-See [Astral Documentation](https://docs.astral.sh/uv) for installing the uv package manager.
-
-
-## Project dependencies
-
-### Create a virtual environment
-
-In order to make a safe installation on the system, it is suggested to create a virtual envionment and install all the packages in this VE.
-Let's create a virtual environment called SmartCompiler.
-`python -m venv SmartCompiler`
-
-Now, let's initiallize the virtual environment.
-`source SmartCompiler/bin/activate`
-
-
-### Packages
-After installing **uv** run: ```uv sync``` for syncing project dependencies. 
-
-
-If you do not want to use `uv` for dependencies maangement, you can install dependencies from the **requirements.txt** file. 
-You can run `pip install -r requirements.txt` 
-
-### Ollama
-To deploy a LLM using ollama first we need to install Ollama by following 
-its [Official Documentation](https://ollama.com).
-
-Once Ollama is installed deploy the Ollama server (if it was not deployed by the installation).
-
-
-### Quick Ollama deploy
-1. Serve the Ollama server: ```ollama serve``` (if it is not already deployed).
-2. Create LLM model using the SmartCompiler Modelfile: ```ollama create llama3.1-smart-compiler -f ollama-smart-compiler-Modelfile```.
-3. Run the created LLM: ```ollama run llama3.1-smart-compiler:latest```.
-4. If it opens a chat after running the LLM, just type ```/bye``` to close that chat.
-
-#### Useful notes
-##### To extract a Modelfile with ollama
-
-```ollama show --modelfile llama3.1 > Modelfile```
-
-###### To create from Modelfile with ollama
-
-```ollama create llama3.1-tool -f Modelfile```
-
-
-
-#### Setting up Environment variables
-Set up the environment variables in a ```.env``` file.
-An example of how this file looks like.
-```
-# For client, see envs/.client.example.env
-# .env
-LOG_LEVEL=INFO
-OLLAMA_MODEL=llama3.1-smart-compiler:latest
-OLLAMA_HOST=http://localhost:11434
-MCP_SERVER_URL=http://localhost:8000/sse
-ALLOWED_PATHS="/mnt/d/workspace/python/smart-compiler/examples"
-```
-In order to activate these client environment varibles , we must type :
-
-`set -o allexport; source .env; set +o allexport`
-
-
-
-```
-For Server, see envs/.server.example.env
-LOG_LEVEL=INFO
-OLLAMA_MODEL=llama3.1:latest
-OLLAMA_HOST=http://localhost:11434
-MCP_SERVER_HOST=0.0.0.0
-MCP_SERVER_PORT=8000
-MCP_SERVER_TRANSPORT=sse
-ENABLE_REST_API=true
-ALLOWED_PATHS="/mnt/d/workspace/python/smart-compiler/examples"
-
-```
-In order to activate these server environment varibles , we must type :
-
-`set -o allexport; source .env; set +o allexport`
-
-we can aslo do it with: export $(cat .env | xargs) on Linux to load the env variables or just source in Windows
-
-
-## Option 1:  Running the project without Docker
-For running the project, once all dependencies and configurations are set, run the following command:
-
-### Cetus compiler
-
-SMART uses Cetus as a separate compiler. Get it from the [Cetus project](https://github.com/PAROT-Udel/The-Cetus-Project). To clone and build it, run:
-
-```bash
-git clone https://github.com/PAROT-Udel/The-Cetus-Project.git
-cd The-Cetus-Project
-./build.sh bin
-```
-
-If you download an archive instead, extract it and run `./build.sh bin` from the extracted project root (the directory containing `build.sh`).
-
-The build creates the Cetus launcher at `bin/cetus`. Set `CETUS` to the absolute path of that executable, for example `/path/to/The-Cetus-Project/bin/cetus`. Keep the checkout intact because the launcher uses supporting files from the same Cetus directory.
-
-### SERVER (without Docker)
-
-Before starting SMART, set `CETUS` to the absolute path of the `bin/cetus` executable built above, and set `CETUS_PROFILES_FILE` to the SMART-COMPILER profile file. Both variables are required for optimization requests; `CETUS_TIMEOUT_SECONDS` is optional and defaults to 300 seconds.
-
-```bash
-export CETUS="/path/to/The-Cetus-Project/bin/cetus"
-export CETUS_PROFILES_FILE="/path/to/SMART-COMPILER/config/profiles.json"
-export CETUS_TIMEOUT_SECONDS=300
-
-# Confirm both configured paths exist and are usable.
-test -x "$CETUS" || { echo "Cetus is missing or not executable: $CETUS"; exit 1; }
-test -r "$CETUS_PROFILES_FILE" || { echo "Profiles file is missing or unreadable: $CETUS_PROFILES_FILE"; exit 1; }
-
-python src/run_server.py
-```
-
-Replace the example paths with paths on the machine running SMART. Do not rely on a checked-in Cetus location. Docker Compose has its own host-path setup below.
-
-### CLIENT
-Run the client.
-
-Note: This client is a simple version that extends Llama model for using tools. Since the client is not robust enough, we encourage you using other more robust tools such as Claude desktop, Copilot or ChatGPT with MCP tools.
-
-Smart compiler client is a PoC.
-
-```bash
-python src/run_client.py
-
-```
-
-The client displays `You:` and accepts a natural-language request directly. It does not prompt separately for a project folder or file name. When asking it to optimize a file, include that C file's absolute path and the optimization profile. Replace `/path/to/SMART-COMPILER` in these examples with the location of your checkout.
-
-Examples:
-
-- **Parallelization:** `Please optimize the C file at /path/to/SMART-COMPILER/Testing_Examples/01_vector_scale.c using the parallel profile.`
-- **Tiling:** `Please optimize the C file at /path/to/SMART-COMPILER/Testing_Examples/03_matrix_multiply.c using the paw_tiling_nt profile.`
-- **Loop interchange:** `Please optimize the C file at /path/to/SMART-COMPILER/Testing_Examples/05_loop_interchange.c using the loop_interchange profile.`
-
-To profile a code snippet, include its C source in the request, for example:
-
-```text
-Profile this C program and summarize its performance:
-<paste C source here>
-```
-
-
-## Option 2: Cetus optimizer runtime (Docker Compose)
-
-The server image includes a Java runtime for Cetus. Before starting Compose, set the host paths to the built Cetus checkout and SMART-COMPILER profile JSON. The checkout is mounted read-only at the absolute path embedded in its generated `bin/cetus` launcher; set `CETUS_CONTAINER_DIR` to that path. The profile file is mounted read-only into the server container. These values are supplied at runtime rather than baked into the image.
-
-```bash
-export CETUS_HOST_DIR="/path/on/host/The-Cetus-Project"
-export CETUS_CONTAINER_DIR="/path/embedded/The-Cetus-Project"
-export CETUS="$CETUS_CONTAINER_DIR/bin/cetus"
-export CETUS_PROFILES_HOST_FILE="/path/on/host/SMART-COMPILER/config/profiles.json"
-docker compose up -d --build
-```
-
-Replace the example paths with locations on your machine. `CETUS_CONTAINER_DIR` must match the checkout path embedded in the Cetus launcher. These shell exports do not modify an existing `.env` file or other user configuration. Compose passes `CETUS` and mounts the profile file as `CETUS_PROFILES_FILE` inside the server container.
-
-The server keeps uploaded inputs, transformed outputs, and task records in named volumes mounted at `/app/files` and `/app/db`, so they survive container recreation.
-
-## Invoking the Cetus optimizer
-
-The optimizer accepts C source and applies one named profile from `SMART-COMPILER/config/profiles.json`. Available profiles are `parallel`, `paw_tiling_nt`, `paw_tiling_lrw`, `paw_tiling_fixed32`, `reuse_analysis`, and `loop_interchange`.
-
-### MCP
-
-Call the `optimize_code_snippet` tool with the C source and a profile. For example:
-
-```json
-{
-  "code_snippet": "#include <stdio.h>\nint main(void) { return 0; }\n",
-  "optimization_profile": "parallel"
-}
-```
-
-The tool returns the transformed C source as text.
-
-### REST API
-
-Upload a `.c` file to `POST /tasks` as multipart form data. For example:
-
-```bash
-curl --fail -X POST http://localhost:8000/tasks \
-  -F "task_type=optimize" \
-  -F "language=c" \
-  -F "optimization_profile=paw_tiling_nt" \
-  -F "file=@input.c"
-```
-
-The response includes `task_id` and `task_status`. Poll `GET /tasks/{id}` until the status is `completed` or `failed`. On success, use `task_result.file_path` to download the transformed source:
-
-```bash
-FILE_PATH="<copy task_result.file_path from the response>"
-curl --fail --get http://localhost:8000/files/download \
-  --data-urlencode "file_path=${FILE_PATH}" \
-  --output optimized.c
-```
-
-If the task fails, inspect `task_result.error` in the response.
-
-`Regression-Test` checks transformed code against expected output and builds/runs benchmark programs for correctness. It does not measure execution speed or select the fastest profile; compare benchmark timings separately when evaluating performance.
-
-## Option A: Running from a single container
-### Building image.
-Build the smart compiler server, client and Ollama by running the script:
-```bash
-docker compose up -d --build
-```
-
-### Start an interactive sesion.
-```bash
-docker attach smart_client
-```
-
-Start playing with the Smart Compiler!
-
-## IMPORTANT NOTE: 
-
-In case thwere is an error that says : "llama3.1-smart-compiler:latest" not found"
-Type the following commands:
-```bash
-docker compose exec ollama sh -lc 'ollama pull llama3.1'
-docker compose exec ollama sh -lc 'ollama create llama3.1-smart-compiler -f /workspace/ollama-smart-compiler-Modelfile'
-```
-And then restart the client:
-
-```bash
-docker compose restart client
-```
-
-and 
-
-### Start an interactive sesion.
-```bash
-docker attach smart_client
-```
-
-Start playing with the Smart Compiler!
-
-
-## Option B: Running from a two different containers
-
-### Building images.
-
-Build the smart compiler server and client by running the scripts:
-
-```bash
-docker build -f Dockerfile -t smart_server . #For SERVER
-docker build -f Client_dockerfile -t smart_client . #For Client
-```
-
-**Note:** By default, the dockerfiles are configured for localhost deploy. If you are planning to deploy it in a distributed architecture, you need to make sure on setting up the proper env variables inside the dockerfiles.
-
-### Running containers
-For running the smart server you can run the following script.
-```bash
-docker run -d --name smart_server -p 8000:8000 smart_server #Server
-docker run -it --name smart_client -p 8001:8001 smart_client #Client. Remember -it
-
-```
-
-
-# Tutorials
-The Smart Compiler leverages AI models alongside traditional compiler techniques to boost the performance and scalability of C and Python programs. Through intelligent profiling and optimization strategies, it identifies and applies enhancements to improve code efficiency.
-
-## Option 3: Getting Started as an MCP Tool with COpilot or Cursor or Claude Desktop
-
-This section guides you through setting up and using the Smart Compiler as an MCP (Model Context Protocol) tool alongside Cursor or Claude Desktop for code profiling and optimization.
-
-### Copilot
-(In case the env varibales are not enabled and the client and the server are not deployed)
-First, we need to enable the environment variables for both, the Server and the client. See previous sections .
-
-Now, we must deploy the server
-
-```bash
-python src/run_server.py
-
-```
-
-Once the servwer is deployed, let's deploy the Client
-
-```bash
-python src/run_client.py
-
-```
-
-Once the client and the server are deployed, we must go to VScode and type "control + shift + P " and search for " MCP: add Server"
-
-<img src="docs/images/addServer.png" alt="addServer" width="600"/>
-
-Then we choose HTTP:
-
-<img src="docs/images/httpMCP.png" alt="http" width="600"/>
-
-and then we add our Smart Compiler CLient deployed address: 
-
-```bash
-http://localhost:8000/sse
-```
-
-Now, we open a chat in COpilot and we set "Agent" instead of "Ask"
-
-<img src="docs/images/Agent.png" alt="agent" width="600"/>
-
-Now, we can start our first use case: 
-
-Create a python code snippet that do some matrix multiplication and profile it
-
-<img src="docs/images/usecaseCopilot.png" alt="usecaseCo" width="600"/>
-
-The code snippet and profiling information will be stored in the tmp/ directory inside your SMART-COMPILER checkout.
-
-
-### CORSE AND CLAUDE CONFIGURATION
-
-### Server Setup
-Configure the required environment variables in a local `.env` file, such as `.local.server.env`, to enable the MCP server.
-
-```bash
-#.local.server.env
-LOG_LEVEL=INFO
-OLLAMA_MODEL=llama3.1:latest
-OLLAMA_HOST=http://localhost:11434  # Adjust to your model's hosting address
-MCP_SERVER_HOST=0.0.0.0 #used for both, rest api and mcp servers
-MCP_SERVER_PORT=8000 #for mcp and rest
-MCP_SERVER_TRANSPORT=stdio
-ENABLE_REST_API=false
-ALLOWED_PATHS="/path/to/smart-compiler/examples"  # Specify the accessible directory
-```
-
-### Configuring Cursor
-For Cursor, update the configuration to connect to the MCP server.
-
-```json
-{
-  "mcpServers": {
-    "smart_compiler": {
-      "url": "http://localhost:8000/sse",
-      "env": {}
-    }
-  }
-}
-```
-
-### Configuring Claude Desktop
-For Claude Desktop, configure the command and environment settings to run the MCP server.
-
-```json
-{
-  "mcpServers": {
-    "smart_compiler": {
-      "command": "uv",
-      "args": [
-        "--directory",
-        "/path/to/smart-compiler",
-        "run",
-        "src/run_server.py"
-      ],
-      "env": {
-        "UV_PROJECT_ENVIRONMENT": "/path/to/smart-compiler",
-        "UV_ENV_FILE": "/path/to/smart-compiler/envs/.local.mcp_server.env"
-      }
-    }
-  }
-}
-```
-
-### Verifying Server Deployment
-Ensure the MCP server is running correctly by checking its connectivity.Refer to the example profiling request screenshot in the documentation:
-<div>
-    <img src="docs/images/use_case_1_1.png" alt="Checking MCP SSE server with Cursor" width="600"/>
-</div>
-
-### Generating Code Snippets
-Using Cursor to generate a code snippet for analysis.  
-<br>
-<img src="docs/images/use_case_1_2.png" alt="Example code snippet generated by Cursor" width="600"/>
-
-### Profiling Code
-Request the Smart Compiler to profile your code via the MCP client. An example of tool usage is shown in the documentation.
-
-<img src="docs/images/use_case_1_3.png" alt="Asking Cursor to profile the code snippet" width="600"/>
-
-### Advanced Usage
-Experiment with larger datasets and more complex interactions, as demonstrated in the documentation screenshots:
-
-<img src="docs/images/use_case_1_4.png" alt="Trying a larger dataset" width="600"/>
-<br>
-<img src="docs/images/use_case_1_5.png" alt="Executing MCP tool" width="600"/>
-<br>
-<img src="docs/images/use_case_1_6.png" alt="Cursor explaining profiling results" width="600"/>
-<br>
-
-For a complete example, review the chat history in [Cursor + SmartCompiler example](docs/cursor_simple_python_snippet_for_matrix.md)
-
-**Summary**: This section covers setting up the Smart Compiler as an MCP tool, configuring environment variables, connecting with Cursor or Claude Desktop, verifying server deployment, generating code snippets, profiling code, and exploring advanced use cases with larger datasets.
-
-## Using Smart Compiler as a REST Service
-
-This section explains how to deploy the Smart Compiler as part of monitoring environment by enabling its REST API for compiler tasks.
-
-### Environment Setup for REST API
-Configure the environment variables in `local.server.env` and enable the REST API.
-
-```bash
-LOG_LEVEL=INFO
-OLLAMA_MODEL=llama3.1:latest
-OLLAMA_HOST=http://localhost:11434  # Adjust to your model's hosting address
-MCP_SERVER_HOST=0.0.0.0 #used for mcp and rest servers
-MCP_SERVER_PORT=8000
-MCP_SERVER_TRANSPORT=stdio
-ENABLE_REST_API=true  # Enable REST API
-ALLOWED_PATHS="/path/to/smart-compiler/examples"  # Specify the accessible directory
-```
-
-### Accessing API Documentation
-Once the server is deployed, access the API documentation at `http://localhost:8000/docs`. For Postman collections, refer to the Smart Compiler GitHub repository.
-
-### Scheduling a Profiling Task - IMT integration
-Schedule a profiling task to analyze a code snippet, such as the provided [example](examples/matrix-multiplication/main.py)
-
-<img src="docs/images/use_case_2_1.png" alt="Postman request for scheduling task" width="600"/>
-
-### Checking Task Status
-Monitor the status of a scheduled profiling task, as shown in the screenshot.
-
-<img src="docs/images/use_case_2_2.png" width="600" alt="Monitoring task through the API"/>
-
-### Retrieving Profiling Results
-Access profiling results via the API: 
-
-<img src="docs/images/use_case_2_3.png" width="600" alt="Getting profiling content"/>
-
-### Scheduling an Optimization Task
-*Note*: Optimization task scheduling is currently in development and not yet available.
-
-
-### Client Setup
-
-Check `envs` folder to see examples for environment configuration. 
-
-```bash
-LOG_LEVEL=INFO
-OLLAMA_MODEL=llama3.1-smart-compiler:latest #A LLM that support tools is required
-OLLAMA_HOST=http://localhost:11434
-MCP_SERVER_URL=http://localhost:8000/sse
-ALLOWED_PATHS="/mnt/d/workspace/python/smart-compiler/examples"
-```
-
-Then, you can run the following command to initialize the Smart Compiler. 
-```bash
-python run src/run_client.py
-#or
-uv run src/run_client.py
-```
-
-Note: The client implemented in the SmartCompiler project is a PoC of a client. The “client” inside the SmartCompiler project is not a full production-ready client, but rather a minimal or experimental implementation. Its purpose is to demonstrate feasibility—showing that a client can connect, interact, and work with the SmartCompiler system. For more advanced uses, we recommend trying it out with platforms focused on MCP tools such as Cursor, Claude Desktop or Github Copilot as explain in previous sections.
-
---- 
+# Reference
+
+| Technical reference | Contents |
+|---|---|
+| [Configuration](docs/reference/configuration.md) | Client/server environment variables, defaults, runtime paths, and update behavior |
+| [Optimization profiles](docs/reference/optimization-profiles.md) | `profiles.json` fields, available profiles, custom entries, and tuning assumptions |
+| [REST and MCP APIs](docs/reference/api.md) | Tool arguments, file uploads, task polling, downloads, and output persistence |
+
+## Available optimization profiles
+
+| Profile | Purpose |
+|---|---|
+| `parallel` | OpenMP parallelization, including dependence, privatization, and reduction analyses |
+| `paw_tiling_nt` | Parallel-aware tiling using NT tile selection |
+| `paw_tiling_lrw` | Parallel-aware tiling using LRW/FindB tile selection |
+| `paw_tiling_fixed32` | Parallel-aware tiling with fixed tile size 32 |
+| `reuse_analysis` | Parallelization with explicit reuse-vector analysis |
+| `loop_interchange` | Loop interchange with OpenMP generation disabled |
+
+These entries are editable in SMART's own `config/profiles.json`. Read the [profile schema and customization guide](docs/reference/optimization-profiles.md) before changing them. Upstream Cetus also supports subscripted-subscript analysis; SMART does not currently ship a dedicated profile or example for that analysis.

@@ -13,6 +13,8 @@ except ValueError:
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
 MCP_SERVER_TRANSPORT = os.getenv("MCP_SERVER_TRANSPORT", "sse")
-ENABLE_REST_API = bool(os.getenv("ENABLE_REST_API", "false"))
+ENABLE_REST_API = os.getenv("ENABLE_REST_API", "false").strip().lower() in {
+    "1", "true", "yes", "on"
+}
 
 logger.debug(f"Server config: LOG_LEVEL={LOG_LEVEL}, HOST={HOST}, PORT={PORT}, OLLAMA_HOST={OLLAMA_HOST}, OLLAMA_MODEL={OLLAMA_MODEL}, MCP_SERVER_TRANSPORT={MCP_SERVER_TRANSPORT}")

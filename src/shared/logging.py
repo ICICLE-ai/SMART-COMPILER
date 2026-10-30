@@ -50,7 +50,8 @@ class ColoredFormatter(logging.Formatter):
     
 
 logger = logging.getLogger("smart_compiler_logger")
-handler = logging.StreamHandler(sys.stdout)
+# Keep stdout available for MCP JSON-RPC when the server uses stdio.
+handler = logging.StreamHandler(sys.stderr)
 
 uvicorn_loggers = [
     logging.getLogger("uvicorn"),

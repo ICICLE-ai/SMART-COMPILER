@@ -1,122 +1,96 @@
-# docker-compose.yml
 name: smart_stack
 
 services:
-  ollama:
-    image: ollama/ollama:latest
-    container_name: smart_ollama
-    volumes:
-      - ollama_data:/root/.ollama
-      - ./:/workspace:ro       # to access your Modelfile from the repo root
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "sh -lc 'ollama list >/dev/null 2>&1 || exit 1'"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
-
-  # One-time init to ensure the custom model exists inside Ollama
-  ollama_init:
-    image: ollama/ollama:latest
-    depends_on:
-      ollama:
-        condition: service_healthy
-    environment:
-      OLLAMA_HOST: "http://ollama:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-      - ./:/workspace:ro
-    entrypoint: ["sh", "-lc"]
-    command: |
-      set -e
-      # wait up to ~120s for API
-      for _ in $(seq 1 60); do
-        if ollama list >/dev/null 2>&1; then break; fi
-        echo "Waiting for Ollama..."; sleep 2
-      done
-      test -f /workspace/ollama-smart-compiler-Modelfile
-      ollama pull llama3.1
-      ollama show llama3.1-smart-compiler >/dev/null 2>&1 || \
-        ollama create llama3.1-smart-compiler -f /workspace/ollama-smart-compiler-Modelfile
-    restart: "no"
-
   server:
-    container_name: smart_server
     build:
       context: .
       dockerfile: Dockerfile
     image: smart_server:latest
     environment:
-      MCP_SERVER_HOST: "0.0.0.0"
-      MCP_SERVER_PORT: "8000"
-      OLLAMA_HOST: "http://ollama:11434"
-      OLLAMA_MODEL: "llama3.1:latest"
+      HOST: "0.0.0.0"
+      PORT: "8000"
       MCP_SERVER_TRANSPORT: "sse"
       LOG_LEVEL: "INFO"
       ENABLE_REST_API: "true"
-      ALLOWED_PATHS: "/app/runtime-path"
-      CETUS: "${CETUS:?Set CETUS to the Cetus binary path inside the server container}"
-      CETUS_PROFILES_FILE: "/app/cetus-profiles.json"
+      CETUS: "/opt/cetus/bin/cetus"
+      CETUS_PROFILES_FILE: "/app/config/profiles.json"
+      # Used only when a task explicitly requests the Ollama profiler.
+      OLLAMA_HOST: "http://ollama:11434"
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     volumes:
-      - server_runtime:/app/runtime-path
       - server_files:/app/files
       - server_db:/app/db
-      # Cetus's generated launcher embeds this checkout path in its classpath.
-      - "${CETUS_HOST_DIR:?Set CETUS_HOST_DIR to the checkout path on the host}:${CETUS_CONTAINER_DIR:?Set CETUS_CONTAINER_DIR to the path embedded in bin/cetus}:ro"
-      - "${CETUS_PROFILES_HOST_FILE:?Set CETUS_PROFILES_HOST_FILE before running Docker Compose}:/app/cetus-profiles.json:ro"
     restart: unless-stopped
-    depends_on:
-      ollama:
-        condition: service_healthy
-      ollama_init:
-        condition: service_completed_successfully
     healthcheck:
-      # Simple TCP probe
-      test: ["CMD-SHELL", "python -c 'import socket,sys; s=socket.socket(); s.settimeout(2); s.connect((\"127.0.0.1\",8000)); s.close(); sys.exit(0)'"]
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"
       interval: 10s
       timeout: 3s
       retries: 20
       start_period: 45s
 
+  # Enable these services with: docker compose --profile llm up -d --build
+  ollama:
+    profiles: [llm]
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  ollama_init:
+    profiles: [llm]
+    image: ollama/ollama:latest
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: "http://ollama:11434"
+    volumes:
+      - ./ollama-smart-compiler-Modelfile:/workspace/Modelfile:ro
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        set -eu
+        if ! ollama show llama3.1-smart-compiler:latest >/dev/null 2>&1; then
+          ollama pull llama3.1
+          ollama create llama3.1-smart-compiler -f /workspace/Modelfile
+        fi
+    restart: "no"
+
   client:
-    container_name: smart_client
+    profiles: [llm]
     build:
       context: .
       dockerfile: Client_dockerfile
     image: smart_client:latest
     environment:
       MCP_SERVER_URL: "http://server:8000/sse"
-      MCP_SERVER_HOST: "server"
-      MCP_SERVER_PORT: "8000"
-      MCP_SERVER_TRANSPORT: "sse"
-      OLLAMA_HOST: "http://ollama:11434"
-      OLLAMA_MODEL: "llama3.1-smart-compiler:latest"
+      LLM_HOST: "${LLM_HOST:-http://ollama:11434/v1}"
+      LLM_MODEL: "${LLM_MODEL:-llama3.1-smart-compiler:latest}"
+      # Optional passthrough for an external provider; Ollama needs no API key.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       LOG_LEVEL: "INFO"
-      ALLOWED_PATHS: "/app/runtime-path"
-    extra_hosts:
-    - "host.docker.internal:host-gateway"  
-    # Remove this block if the client doesn't expose anything to the host
-    ports:
-      - "8001:8001"
-    volumes:
-      - client_runtime:/app/runtime-path
+      ALLOWED_PATHS: "file:///app/Testing_Examples"
     stdin_open: true
     tty: true
-    restart: unless-stopped
+    restart: "no"
     depends_on:
       server:
-        condition: service_healthy
-      ollama:
         condition: service_healthy
       ollama_init:
         condition: service_completed_successfully
 
 volumes:
   ollama_data:
-  server_runtime:
   server_files:
   server_db:
-  client_runtime:
